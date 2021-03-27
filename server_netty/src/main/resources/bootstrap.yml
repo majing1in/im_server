@@ -1,0 +1,17 @@
+server:
+  port: 8002
+spring:
+  application:
+    name: server-netty
+  cloud:
+    nacos:
+      discovery:
+        server-addr: http://127.0.0.1:8848
+        enabled: true
+      config:
+        server-addr: http://127.0.0.1:8848
+        namespace: 9444bc46-30fd-4f6a-85f0-ea90af5e0f8e
+        enabled: true
+        refresh-enabled: true
+        file-extension: yml
+

@@ -1,0 +1,17 @@
+server:
+  port: 8002
+spring:
+  application:
+    name: server_http
+  cloud:
+    nacos:
+      discovery:
+        server-addr: http://127.0.0.1:8848
+        enabled: true
+      config:
+        server-addr: http://127.0.0.1:8848
+        namespace: # TODO
+        enabled: true
+        refresh-enabled: true
+        file-extension: yml
+
