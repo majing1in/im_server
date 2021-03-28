@@ -18,7 +18,8 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class ResponseMessageVo implements Serializable {
     private static final long serialVersionUID = -2161809327808081932L;
-    private String message;
+    private Integer messageType;
+    private String messageContent;
     private String sender;
     private String receiver;
 }

@@ -1,7 +1,6 @@
 package com.xiaoma.im.manager.friends;
 
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.system.UserInfo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xiaoma.im.constants.Constants;
 import com.xiaoma.im.dao.MessageGroupMapper;

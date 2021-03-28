@@ -1,7 +1,7 @@
 package com.xiaoma.im.controller;
 
 import cn.hutool.core.util.ObjectUtil;
-import com.xiaoma.im.enums.ResponseEnum;
+import com.xiaoma.im.utils.BaseResponseUtils;
 import com.xiaoma.im.utils.R;
 import com.xiaoma.im.utils.SessionSocketUtils;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -25,19 +25,19 @@ public class NettyController {
     private SessionSocketUtils sessionSocketUtils;
 
     @GetMapping("/channelId")
-    public R getChannelId(@RequestParam("userAccount") String userAccount) {
-        NioSocketChannel nioSocketChannel = sessionSocketUtils.getNioSocketChannel(userAccount);
+    public R<?> getChannelId(@RequestParam("userAccount") String userAccount) {
+        NioSocketChannel nioSocketChannel = sessionSocketUtils.getUserNioSocketChannelByAccount(userAccount);
         if (ObjectUtil.isNotEmpty(nioSocketChannel)) {
-            return R.builder().code(ResponseEnum.RESPONSE_SUCCESS.getCode()).message(ResponseEnum.RESPONSE_SUCCESS.getMessage()).data(nioSocketChannel.id().asLongText()).build();
+            return BaseResponseUtils.getSuccessResponse(nioSocketChannel.id().asLongText());
         }
-        return R.builder().code(ResponseEnum.RESPONSE_NOT_FIND.getCode()).message(ResponseEnum.RESPONSE_NOT_FIND.getMessage()).build();
+        return BaseResponseUtils.getNotFoundResponse();
     }
 
     @GetMapping("/deleteChannelId")
-    public R deleteChannelId(@RequestParam("userAccount") String userAccount) {
-        if (ObjectUtil.isNotEmpty(sessionSocketUtils.removeSessionMap(userAccount))) {
-            return R.builder().code(ResponseEnum.RESPONSE_SUCCESS.getCode()).message(ResponseEnum.RESPONSE_SUCCESS.getMessage()).build();
+    public R<?> deleteChannelId(@RequestParam("userAccount") String userAccount) {
+        if (ObjectUtil.isNotEmpty(sessionSocketUtils.getUserNioSocketChannelByAccount(userAccount))) {
+            return BaseResponseUtils.getSuccessResponse();
         }
-        return R.builder().code(ResponseEnum.RESPONSE_FAIL.getCode()).message(ResponseEnum.RESPONSE_FAIL.getMessage()).build();
+        return BaseResponseUtils.getFailedResponse();
     }
 }

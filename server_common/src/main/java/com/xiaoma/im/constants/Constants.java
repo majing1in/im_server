@@ -21,6 +21,7 @@ public class Constants {
      */
     public static final String SERVER_ONLINE = "server_online_";
 
+    public static final String SERVER_REDIS_LIST = "server_online_";
 
     /**
      * 服务端 用户权限

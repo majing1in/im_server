@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xiaoma.im.constants.Constants;
 import com.xiaoma.im.dao.UserInfoMapper;
 import com.xiaoma.im.entity.UserInfo;
-import com.xiaoma.im.enums.ResponseEnum;
+import com.xiaoma.im.utils.BaseResponseUtils;
 import com.xiaoma.im.utils.DateUtils;
 import com.xiaoma.im.utils.R;
 import com.xiaoma.im.utils.RedisTemplateUtils;
@@ -52,48 +52,48 @@ public class RegisterController {
      */
     @ApiOperation("生成注册验证码")
     @GetMapping("/auth")
-    public R userAuth(HttpServletRequest request) {
+    public R<?> userAuth(HttpServletRequest request) {
         String uuid = request.getHeader("uuid");
         if (StringUtils.isBlank(uuid)) {
-            return R.builder().code(ResponseEnum.RESPONSE_FAIL.getCode()).message(ResponseEnum.RESPONSE_FAIL.getMessage()).build();
+            return BaseResponseUtils.getFailedResponse();
         }
         // 生成验证码
         String random = String.valueOf((int) (Math.random() * 9000 + 1000));
         // 设置过期时间 5 分钟
         long expireTime = 5 * 60;
         redisTemplateUtils.setObject(Constants.SERVER_REGISTER_TIMEOUT + uuid, random, expireTime);
-        return R.builder().code(ResponseEnum.RESPONSE_SUCCESS.getCode()).message(ResponseEnum.RESPONSE_SUCCESS.getMessage()).data(random).build();
+        return BaseResponseUtils.getSuccessResponse(random);
     }
 
     @ApiOperation("注册用户")
     @PostMapping("/register")
-    public R userRegister(@RequestBody UserInfoVo userInfoVo, HttpServletRequest request) {
+    public R<?> userRegister(@RequestBody UserInfoVo userInfoVo, HttpServletRequest request) {
         if (ObjectUtil.isEmpty(userInfoVo) || StringUtils.isBlank(userInfoVo.getUserAccount()) || StringUtils.isBlank(userInfoVo.getUserPassword()) || StringUtils.isBlank(userInfoVo.getVerificationCode())) {
-            return R.builder().code(ResponseEnum.RESPONSE_VALID.getCode()).message(ResponseEnum.RESPONSE_VALID.getMessage()).build();
+            return BaseResponseUtils.getValidResponse();
         }
         String uuid = request.getHeader("uuid");
         if (StringUtils.isBlank(uuid)) {
-            return R.builder().code(ResponseEnum.RESPONSE_VALID.getCode()).message(ResponseEnum.RESPONSE_VALID.getMessage()).build();
+            return BaseResponseUtils.getValidResponse();
         }
         String redisKey = Constants.SERVER_REGISTER_TIMEOUT + uuid;
         String verificationCode = (String) redisTemplateUtils.getObject(redisKey);
         if (StringUtils.isBlank(verificationCode) || !ObjectUtil.equal(verificationCode, userInfoVo.getVerificationCode())) {
-            return R.builder().code(ResponseEnum.RESPONSE_TIMEOUT.getCode()).message(ResponseEnum.RESPONSE_TIMEOUT.getMessage()).build();
+            return BaseResponseUtils.getTimeoutResponse();
         }
         redisTemplateUtils.deleteData(Collections.singletonList(redisKey));
         UserInfo user = userInfoMapper.selectOne(new LambdaQueryWrapper<UserInfo>().eq(UserInfo::getUserAccount, userInfoVo.getUserAccount()));
         if (ObjectUtil.isNotEmpty(user)) {
-            return R.builder().code(ResponseEnum.RESPONSE_FAIL.getCode()).message(ResponseEnum.RESPONSE_FAIL.getMessage()).build();
+            return BaseResponseUtils.getFailedResponse();
         }
         userInfoVo.setCreateTime(DateUtils.localDateTimeConvertToDate());
         userInfoVo.setUpdateTime(DateUtils.localDateTimeConvertToDate());
         TransactionStatus status = platformTransactionManager.getTransaction(new DefaultTransactionDefinition());
         try {
             platformTransactionManager.commit(status);
-            return R.builder().code(ResponseEnum.RESPONSE_SUCCESS.getCode()).message(ResponseEnum.RESPONSE_SUCCESS.getMessage()).build();
+            return BaseResponseUtils.getSuccessResponse();
         } catch (Exception e) {
             platformTransactionManager.rollback(status);
-            return R.builder().code(ResponseEnum.RESPONSE_UNKNOWN.getCode()).message(ResponseEnum.RESPONSE_UNKNOWN.getMessage()).build();
+            return BaseResponseUtils.getUnknownResponse();
         }
     }
 }

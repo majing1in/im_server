@@ -1,6 +1,6 @@
 package com.xiaoma.im.utils;
 
-import com.xiaoma.im.constants.Constants;
+import cn.hutool.core.util.ObjectUtil;
 import com.xiaoma.im.handler.HeatBeatHandler;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Map;
 
 /**
  * @Author Xiaoma
@@ -22,9 +21,6 @@ public class HeatBeatHandlerUtils implements HeatBeatHandler {
     private static final Long HEARTBEAT_TIME = 1000 * 10L;
 
     @Resource
-    private RedisTemplateUtils redisTemplateUtils;
-
-    @Resource
     private SessionSocketUtils sessionSocketUtils;
 
     @Override
@@ -33,15 +29,15 @@ public class HeatBeatHandlerUtils implements HeatBeatHandler {
         String id = channel.id().asLongText();
         Long lastReadTime = NettyAttrUtil.getReaderTime(ctx.channel());
         long now = DateUtils.getTimeStamp();
-        Map<String, Object> map = redisTemplateUtils.getMapValue(Constants.SERVER_ONLINE + id);
+        SessionSocketUtils.UserStatus userStatus = sessionSocketUtils.getUserStatusById(ctx.channel().id().asLongText());
         if (lastReadTime != null && now - lastReadTime > HEARTBEAT_TIME) {
-            if (!map.isEmpty()) {
-                sessionSocketUtils.removeSession(id);
-                log.warn("客户端[{}]心跳超时[{}]ms，需要关闭连接!", map.get("userAccount"), now - lastReadTime);
+            if (ObjectUtil.isNotNull(userStatus)) {
+                sessionSocketUtils.removeSessionByAccount(userStatus.getAccount());
+                log.warn("客户端[{}]心跳超时[{}]ms，需要关闭连接!", userStatus.getAccount(), now - lastReadTime);
             }
             ctx.channel().close();
         } else {
-            log.info("客户端[{}] 心跳检测! time = {}", map.get("userAccount"), now - lastReadTime);
+            log.info("客户端[{}] 心跳检测! time = {}", userStatus.getAccount(), now - lastReadTime);
         }
     }
 }

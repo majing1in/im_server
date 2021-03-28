@@ -1,5 +1,7 @@
 package com.xiaoma.im.enums;
 
+import cn.hutool.core.util.ObjectUtil;
+
 /**
  * @Author Xiaoma
  * @Date 2021/2/8 0008 22:46
@@ -20,6 +22,16 @@ public enum MessageTypeEnum {
     MessageTypeEnum(Integer code, String message) {
         this.code = code;
         this.message = message;
+    }
+
+    public static MessageTypeEnum getMessageType(Integer code) {
+        MessageTypeEnum[] values = MessageTypeEnum.values();
+        for (MessageTypeEnum value : values) {
+            if (ObjectUtil.equals(value.getCode(), code)) {
+                return value;
+            }
+        }
+        return null;
     }
 
     public Integer getCode() {

@@ -21,7 +21,7 @@ public class FeignNettyServiceImpl {
     private IFeignNettyService feignNettyService;
 
     public String getChannelId(String userAccount) {
-        R result = feignNettyService.getChannelId(userAccount);
+        R<?> result = feignNettyService.getChannelId(userAccount);
         if (ObjectUtil.equals(result.getCode(), ResponseEnum.RESPONSE_SUCCESS.getCode())) {
             return (String) result.getData();
         }
@@ -29,7 +29,7 @@ public class FeignNettyServiceImpl {
     }
 
     public boolean deleteChannelId(String userAccount) {
-        R result = feignNettyService.deleteChannelId(userAccount);
+        R<?> result = feignNettyService.deleteChannelId(userAccount);
         if (ObjectUtil.equals(result.getCode(), ResponseEnum.RESPONSE_SUCCESS.getCode())) {
             return true;
         }

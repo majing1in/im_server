@@ -191,9 +191,8 @@ public final class RedisTemplateUtils {
         return count != null;
     }
 
-    public boolean lPop(final String key) {
-        Object o = redisTemplate.opsForList().leftPop(key);
-        return o != null;
+    public Object lPop(final String key) {
+        return redisTemplate.opsForList().leftPop(key);
     }
 
     public boolean RPop(final String key) {
@@ -212,4 +211,26 @@ public final class RedisTemplateUtils {
     public List<Object> lGet(final String key, final int start, final int end) {
         return redisTemplate.opsForList().range(key, start, end);
     }
+
+    //****************** map ******************//
+    public Map<Object, Object> hGetAll(String key) {
+        return redisTemplate.opsForHash().entries(key);
+    }
+
+    public Object hGet(String key, String value) {
+        return redisTemplate.opsForHash().get(key, value);
+    }
+
+    public void hPut(String key, Object hashKey, Object value) {
+        redisTemplate.opsForHash().put(key, hashKey, value);
+    }
+
+    public boolean hPutIfAbsent(String key, Object hashKey, Object value) {
+        return redisTemplate.opsForHash().putIfAbsent(key, hashKey, value);
+    }
+
+    public boolean hDelete(String key, Object... fields) {
+        return redisTemplate.opsForHash().delete(key, fields) > 0 ? true : false;
+    }
+
 }

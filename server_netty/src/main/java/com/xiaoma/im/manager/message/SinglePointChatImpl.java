@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSON;
 import com.xiaoma.im.constants.Constants;
 import com.xiaoma.im.dao.PointToPointMapper;
 import com.xiaoma.im.entity.MessagePackage;
+import com.xiaoma.im.enums.MessageTypeEnum;
 import com.xiaoma.im.enums.ResponseEnum;
 import com.xiaoma.im.manager.HandlerBusiness;
 import com.xiaoma.im.utils.RedisTemplateUtils;
@@ -48,13 +49,14 @@ public class SinglePointChatImpl implements HandlerBusiness {
     @Override
     public void process(byte[] content, ChannelHandlerContext channelHandlerContext) {
         PointToPointVo messageSingle = ObjectUtil.deserialize(content);
-        NioSocketChannel channel = sessionSocketUtils.getNioSocketChannel(messageSingle.getFriendAccount());
+        NioSocketChannel channel = sessionSocketUtils.getUserNioSocketChannelByAccount(messageSingle.getFriendAccount());
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         try {
             // 先对消息进行持久化
             pointToPointMapper.insert(messageSingle);
             transactionManager.commit(status);
-            ResponseMessageVo responseMessageVo = ResponseMessageVo.builder().message(messageSingle.getMessage()).sender(messageSingle.getUserAccount()).receiver(messageSingle.getFriendAccount()).build();
+            MessageTypeEnum messageTypeEnum = MessageTypeEnum.getMessageType(messageSingle.getCommandType());
+            ResponseMessageVo responseMessageVo = ResponseMessageVo.builder().messageContent(messageSingle.getMessage()).messageType(messageTypeEnum != null ? messageTypeEnum.getCode() : null).sender(messageSingle.getUserAccount()).receiver(messageSingle.getFriendAccount()).build();
             MessagePackage build = MessagePackage.completePackage(Constants.RECEIVED, ObjectUtil.serialize(responseMessageVo));
             if (ObjectUtil.isNotEmpty(channel)) {
                 channelHandlerContext.writeAndFlush(MessagePackage.completePackage(ResponseEnum.RESPONSE_SUCCESS.getCode(), ResponseEnum.RESPONSE_SUCCESS.getMessage().getBytes(StandardCharsets.UTF_8)));

@@ -3,13 +3,16 @@ package com.xiaoma.im.utils;
 import cn.hutool.core.util.ObjectUtil;
 import com.xiaoma.im.constants.Constants;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Date;
+import java.util.Map;
 
 /**
  * @Author Xiaoma
@@ -23,58 +26,62 @@ public class SessionSocketUtils {
     @Resource
     private RedisTemplateUtils redisTemplateUtils;
 
-    private final Map<String, NioSocketChannel> sessionMap = new ConcurrentHashMap<String, NioSocketChannel>();
-
-    public Map<String, NioSocketChannel> getSessionMap() {
-        return this.sessionMap;
-    }
-
-    public NioSocketChannel getNioSocketChannel(String userAccount) {
-        return sessionMap.get(userAccount);
-    }
-
-    public NioSocketChannel removeSessionMap(String userAccount) {
-        return sessionMap.remove(userAccount);
-    }
-
     /**
      * 保存用户与channel的关系
+     *
      * @param userAccount
      * @param nioSocketChannel
      */
-    public void saveSession(String userAccount, NioSocketChannel nioSocketChannel) {
-        Map<String, Object> map = new HashMap<>();
-        map.put(Constants.OPTION_KEY, userAccount);
-        map.put(Constants.OPTION_VALUE, nioSocketChannel);
-        redisTemplateUtils.setKey(Constants.SERVER_ONLINE + nioSocketChannel.id().asLongText(), map);
-        sessionMap.put(userAccount, nioSocketChannel);
+    public boolean saveSession(String userAccount, NioSocketChannel nioSocketChannel) {
+        UserStatus userStatus = UserStatus.builder().channel(nioSocketChannel).loginTime(DateUtils.localDateTimeConvertToDate()).account(userAccount).build();
+        return redisTemplateUtils.hPutIfAbsent(Constants.SERVER_REDIS_LIST, Constants.SERVER_ONLINE + userAccount, userStatus);
     }
 
     /**
      * 移除关系
-     * @param channelId
+     *
+     * @param userAccount
      */
-    public void removeSession(String channelId) {
-        if (StringUtils.isBlank(channelId)) {
-            return;
-        }
-        Map<String, Object> mapValue = redisTemplateUtils.getMapValue(channelId);
-        if (ObjectUtil.isNotEmpty(mapValue)) {
-            redisTemplateUtils.deleteData(Collections.singletonList(channelId));
-            sessionMap.remove((String) mapValue.get(Constants.OPTION_KEY));
-        }
+    public boolean removeSessionByAccount(String userAccount) {
+        return redisTemplateUtils.hDelete(Constants.SERVER_REDIS_LIST, Constants.SERVER_ONLINE + userAccount);
     }
 
-    /**
-     * 清空关系
-     */
-    public void clearSession() {
-        Set<Map.Entry<String, NioSocketChannel>> entries = sessionMap.entrySet();
-        for (Map.Entry<String, NioSocketChannel> entry : entries) {
-            String channelId = entry.getValue().id().asLongText();
-            this.removeSession(channelId);
+    public NioSocketChannel getUserNioSocketChannelByAccount(String userAccount) {
+        UserStatus userStatus = (UserStatus)redisTemplateUtils.hGet(Constants.SERVER_REDIS_LIST, Constants.SERVER_ONLINE + userAccount);
+        if (ObjectUtil.isNull(userStatus)) {
+            return null;
         }
-        sessionMap.clear();
+        return userStatus.getChannel();
+    }
+
+    public UserStatus getUserStatusByAccount(String userAccount) {
+        UserStatus userStatus = (UserStatus)redisTemplateUtils.hGet(Constants.SERVER_REDIS_LIST, Constants.SERVER_ONLINE + userAccount);
+        if (ObjectUtil.isNull(userStatus)) {
+            return null;
+        }
+        return userStatus;
+    }
+
+    public UserStatus getUserStatusById(String channelId) {
+        Map<Object, Object> map = redisTemplateUtils.hGetAll(Constants.SERVER_REDIS_LIST);
+        for (Map.Entry<Object, Object> entry : map.entrySet()) {
+            UserStatus userStatus = (UserStatus) entry;
+            if (ObjectUtil.equals(((UserStatus) entry).getChannel().id().asLongText(), channelId)) {
+                return userStatus;
+            }
+        }
+        return null;
+    }
+
+    @Builder
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    static class UserStatus {
+        private Date loginTime;
+        private NioSocketChannel channel;
+        private String account;
+        private Integer status;
     }
 
 }

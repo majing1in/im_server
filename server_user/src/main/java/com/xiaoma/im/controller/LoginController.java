@@ -11,15 +11,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import com.xiaoma.im.utils.*;
-import com.xiaoma.im.enums.*;
-import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
@@ -46,15 +41,15 @@ public class LoginController {
 
     @ApiOperation("用户单点登录")
     @PostMapping("/login")
-    public R userLogin(@RequestBody UserInfo userInfo) {
+    public R<?> userLogin(@RequestBody UserInfo userInfo) {
         if (ObjectUtil.isEmpty(userInfo) || StringUtils.isBlank(userInfo.getUserAccount()) || StringUtils.isBlank(userInfo.getUserPassword())) {
-            return R.builder().code(ResponseEnum.RESPONSE_VALID.getCode()).message(ResponseEnum.RESPONSE_VALID.getMessage()).build();
+            return BaseResponseUtils.getValidResponse();
         }
         UserInfo user = userInfoMapper.selectOne(new LambdaQueryWrapper<UserInfo>()
                 .eq(UserInfo::getUserAccount, userInfo.getUserAccount())
                 .and(item -> item.eq(UserInfo::getUserPassword, userInfo.getUserPassword())));
         if (ObjectUtil.isEmpty(user)) {
-            return R.builder().code(ResponseEnum.RESPONSE_NOT_FIND.getCode()).message(ResponseEnum.RESPONSE_NOT_FIND.getMessage()).build();
+            return BaseResponseUtils.getNotFoundResponse();
         }
         String channelId = feignNettyServiceImpl.getChannelId(user.getUserAccount());
         String auth = (String) redisTemplateUtils.getObject(Constants.SERVER_ONLINE_AUTH + userInfo.getUserAccount());
@@ -71,19 +66,32 @@ public class LoginController {
             redisTemplateUtils.deleteData(Collections.singletonList(Constants.SERVER_ONLINE_AUTH + userInfo.getUserAccount()));
             if (!feignNettyServiceImpl.deleteChannelId(userInfo.getUserAccount())) {
                 log.info("用户登录失败 ==> deleteChannelId ! account = {}， time = {}", userInfo.getUserAccount(), LocalDateTime.now());
-                return R.builder().code(ResponseEnum.RESPONSE_FAIL.getCode()).message(ResponseEnum.RESPONSE_FAIL.getMessage()).build();
+                return BaseResponseUtils.getFailedResponse();
             }
         }
         String token = MD5Util.convertMD5(UuidUtils.getUuid());
         // 设置权限
         redisTemplateUtils.setObject(Constants.SERVER_ONLINE_AUTH + userInfo.getUserAccount(), token);
         log.info("用户登录成功! account = {}， time = {}", userInfo.getUserAccount(), LocalDateTime.now());
-        return R.builder().code(ResponseEnum.RESPONSE_SUCCESS.getCode()).message(ResponseEnum.RESPONSE_SUCCESS.getMessage()).data(token).build();
+        return BaseResponseUtils.getSuccessResponse(token);
     }
 
-    @PostMapping("/online")
-    public R userOnline(@RequestBody UserInfo userInfo, HttpServletRequest request) {
-
-        return R.builder().code(ResponseEnum.RESPONSE_SUCCESS.getCode()).message(ResponseEnum.RESPONSE_SUCCESS.getMessage()).build();
+    /**
+     * 当客户端异常关闭前发送请求
+     *
+     * @param userAccount
+     * @return
+     */
+    @GetMapping("/online")
+    public R<?> userOnline(@RequestParam("userAccount") String userAccount) {
+        // 直接删除key
+        if (feignNettyServiceImpl.deleteChannelId(userAccount)) {
+            return BaseResponseUtils.getSuccessResponse();
+        }
+        // 删除失败策略
+        String channelId = feignNettyServiceImpl.getChannelId(userAccount);
+        redisTemplateUtils.deleteData(Collections.singletonList(channelId));
+        return BaseResponseUtils.getSuccessResponse();
     }
+
 }

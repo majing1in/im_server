@@ -3,8 +3,8 @@ package com.xiaoma.im.controller;
 import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
 import com.xiaoma.im.entity.UserInfo;
-import com.xiaoma.im.enums.ResponseEnum;
 import com.xiaoma.im.service.UserInfoService;
+import com.xiaoma.im.utils.BaseResponseUtils;
 import com.xiaoma.im.utils.R;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -27,21 +27,21 @@ public class AboutUserController {
 
     @ApiOperation("获取用户个人详情")
     @GetMapping("/info")
-    public R getUserInfo(@RequestParam("id") Integer id) {
+    public R<?> getUserInfo(@RequestParam("id") Integer id) {
         UserInfo userInfo = this.userInfoService.getUserInfoServiceById(id);
         if (ObjectUtil.isEmpty(userInfo)) {
-            R.builder().code(ResponseEnum.RESPONSE_NOT_FIND.getCode()).message(ResponseEnum.RESPONSE_NOT_FIND.getMessage()).build();
+            return BaseResponseUtils.getNotFoundResponse();
         }
-        return R.builder().code(ResponseEnum.RESPONSE_SUCCESS.getCode()).message(ResponseEnum.RESPONSE_SUCCESS.getMessage()).data(JSON.toJSONString(userInfo)).build();
+        return BaseResponseUtils.getSuccessResponse(JSON.toJSONString(userInfo));
     }
 
     @ApiOperation("修改用户个人详情")
     @GetMapping("/update")
-    public R updateUserInfo(@RequestBody UserInfo userInfo) {
+    public R<?> updateUserInfo(@RequestBody UserInfo userInfo) {
         boolean result = userInfoService.updateUserInfo(userInfo);
         if (!result) {
-            R.builder().code(ResponseEnum.RESPONSE_FAIL.getCode()).message(ResponseEnum.RESPONSE_FAIL.getMessage()).build();
+            return BaseResponseUtils.getFailedResponse();
         }
-        return R.builder().code(ResponseEnum.RESPONSE_SUCCESS.getCode()).message(ResponseEnum.RESPONSE_SUCCESS.getMessage()).build();
+        return BaseResponseUtils.getSuccessResponse();
     }
 }

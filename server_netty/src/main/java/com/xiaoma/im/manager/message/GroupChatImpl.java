@@ -75,7 +75,7 @@ public class GroupChatImpl implements HandlerBusiness {
             List<UserDetails> userDetails = userInfoMapper.selectBatchIds(userIds);
             // 获取用户是否在线关联关系
             for (int i = userDetails.size() - 1; i >= 0; i--) {
-                NioSocketChannel socketChannel = sessionSocketUtils.getNioSocketChannel(userDetails.get(i).getUserAccount());
+                NioSocketChannel socketChannel = sessionSocketUtils.getUserNioSocketChannelByAccount(userDetails.get(i).getUserAccount());
                 if (ObjectUtil.isNotNull(socketChannel)) {
                     socketChannel.writeAndFlush(messagePackage);
                     userDetails.remove(i);

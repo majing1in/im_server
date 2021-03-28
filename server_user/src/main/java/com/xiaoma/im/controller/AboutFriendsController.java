@@ -13,6 +13,7 @@ import com.xiaoma.im.response.FriendsResponseDto;
 import com.xiaoma.im.service.UserInfoService;
 import com.xiaoma.im.service.impl.FriendsServiceImpl;
 import com.xiaoma.im.spi.FeignNettyServiceImpl;
+import com.xiaoma.im.utils.BaseResponseUtils;
 import com.xiaoma.im.utils.R;
 import com.xiaoma.im.utils.RedisTemplateUtils;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -64,14 +65,14 @@ public class AboutFriendsController {
      * @return
      */
     @GetMapping("/list")
-    public R getFriends(@RequestParam("userId") Integer userId) {
+    public R<?> getFriends(@RequestParam("userId") Integer userId) {
         if (ObjectUtil.isEmpty(userId)) {
             log.info("FriendController (getFriends) ==> 参数校验失败! time = {}", LocalDateTime.now());
-            return R.builder().code(ResponseEnum.RESPONSE_VALID.getCode()).message(ResponseEnum.RESPONSE_VALID.getMessage()).build();
+            return BaseResponseUtils.getFailedResponse();
         }
         List<FriendsInfo> friendsList = friendService.getFriendsList(userId);
         log.info("FriendController (getFriends) ==> 获取好友列表成功! friends = {} time = {}", JSON.toJSONString(friendsList), LocalDateTime.now());
-        return R.builder().code(ResponseEnum.RESPONSE_SUCCESS.getCode()).message(ResponseEnum.RESPONSE_SUCCESS.getMessage()).data(friendsList).build();
+        return BaseResponseUtils.getSuccessResponse();
     }
 
     /**
@@ -82,18 +83,18 @@ public class AboutFriendsController {
      * @return
      */
     @GetMapping("/apply")
-    public R applyToFriend(@RequestParam("userAccount") String userAccount, @RequestParam("friendAccount") String friendAccount, @RequestParam("nickname") String nickname) {
+    public R<?> applyToFriend(@RequestParam("userAccount") String userAccount, @RequestParam("friendAccount") String friendAccount, @RequestParam("nickname") String nickname) {
         log.info("好友添加请求 userAccount = {}, friendAccount = {}", userAccount, friendAccount);
         if (StringUtils.isBlank(userAccount) || StringUtils.isBlank(friendAccount)) {
             log.info("FriendController (applyToFriend) ==> 参数校验失败! time = {}", LocalDateTime.now());
-            return R.builder().code(ResponseEnum.RESPONSE_VALID.getCode()).message(ResponseEnum.RESPONSE_VALID.getMessage()).build();
+            return BaseResponseUtils.getValidResponse();
         }
         UserInfo userInfo = userInfoService.getUserInfoServiceByAccount(userAccount);
         UserInfo friendInfo = userInfoService.getUserInfoServiceByAccount(friendAccount);
         if (ObjectUtil.isEmpty(friendInfo)) {
-            return R.builder().code(ResponseEnum.RESPONSE_NOT_FIND.getCode()).message(ResponseEnum.RESPONSE_NOT_FIND.getMessage()).build();
+            return BaseResponseUtils.getNotFoundResponse();
         }
-        FriendsResponseDto friendsResponseDto = FriendsResponseDto.completeFriendDto(userInfo.getUserAccount(),nickname,userInfo.getId(),userInfo.getUserHeadPhoto());
+        FriendsResponseDto friendsResponseDto = FriendsResponseDto.completeFriendDto(userInfo.getUserAccount(), nickname, userInfo.getId(), userInfo.getUserHeadPhoto());
         MessagePackage messagePackage = MessagePackage.completePackage(CommandType.COMMAND_APPLY.getCode(), ObjectUtil.serialize(friendsResponseDto));
         String channelId = feignNettyServiceImpl.getChannelId(friendAccount);
         if (StringUtils.isBlank(channelId)) {
@@ -106,22 +107,46 @@ public class AboutFriendsController {
             channel.writeAndFlush(messagePackage);
         }
         log.info("FriendController (applyToFriend) ==> 好友添加操作完成! friendAccount = {} time = {}", friendAccount, LocalDateTime.now());
-        return R.builder().code(ResponseEnum.RESPONSE_SUCCESS.getCode()).message(ResponseEnum.RESPONSE_SUCCESS.getMessage()).build();
+        return BaseResponseUtils.getSuccessResponse();
     }
 
+    /**
+     * 同意好友请求
+     *
+     * @param userAccount
+     * @param usernickname
+     * @param friendAccount
+     * @param nickname
+     * @return
+     */
     @GetMapping("/agree")
-    public R applyToAgree(@RequestParam("userAccount") String userAccount, @RequestParam("usernickname") String usernickname, @RequestParam("friendAccount") String friendAccount, @RequestParam("nickname") String nickname) {
+    public R<?> applyToAgree(@RequestParam("userAccount") String userAccount, @RequestParam("usernickname") String usernickname, @RequestParam("friendAccount") String friendAccount, @RequestParam("nickname") String nickname) {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         try {
             Integer userId = userInfoService.getUserInfoServiceByAccount(userAccount).getId();
             Integer friendId = userInfoService.getUserInfoServiceByAccount(friendAccount).getId();
             friendsInfoMapper.insert(FriendsInfo.createFriend(userId, friendId, nickname));
-            friendsInfoMapper.insert(FriendsInfo.createFriend(friendId,userId,nickname));
+            friendsInfoMapper.insert(FriendsInfo.createFriend(friendId, userId, nickname));
             transactionManager.commit(status);
         } catch (Exception e) {
             transactionManager.rollback(status);
             return R.builder().code(ResponseEnum.RESPONSE_FAIL.getCode()).message(ResponseEnum.RESPONSE_FAIL.getMessage()).build();
         }
         return R.builder().code(ResponseEnum.RESPONSE_SUCCESS.getCode()).message(ResponseEnum.RESPONSE_SUCCESS.getMessage()).build();
+    }
+
+    /**
+     * 获取好友详情
+     *
+     * @param friendsAccount
+     * @return
+     */
+    @GetMapping("/info")
+    public R<?> getFriendsInfo(@RequestParam("friendsAccount") String friendsAccount) {
+        UserInfo userInfo = userInfoService.getUserInfoServiceByAccount(friendsAccount);
+        if (ObjectUtil.isNull(userInfo)) {
+            return BaseResponseUtils.getNotFoundResponse();
+        }
+        return BaseResponseUtils.getSuccessResponse(JSON.toJSONString(userInfo));
     }
 }

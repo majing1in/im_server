@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface IFeignNettyService {
 
     @GetMapping("/netty/channelId")
-    public R getChannelId(@RequestParam("userAccount") String userAccount);
+    public R<?> getChannelId(@RequestParam("userAccount") String userAccount);
 
     @GetMapping("/netty/deleteChannelId")
-    public R deleteChannelId(@RequestParam("userAccount") String userAccount);
+    public R<?> deleteChannelId(@RequestParam("userAccount") String userAccount);
 }
