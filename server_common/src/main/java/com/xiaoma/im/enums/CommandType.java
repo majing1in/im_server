@@ -13,7 +13,8 @@ public enum CommandType {
     COMMAND_SEND(35,"发送消息"),
     COMMAND_RECEIVE(36,"接收消息"),
     COMMAND_APPLY(37,"好友申请"),
-    COMMAND_MESSAGE(38,"未读消息")
+    COMMAND_MESSAGE(38,"未读消息"),
+    COMMAND_PACKAGE(39,"红包来了")
     ;
 
     private Integer code;

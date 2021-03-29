@@ -1,8 +1,8 @@
 package com.xiaoma.im.utils;
 
 import cn.hutool.core.util.ObjectUtil;
+import com.xiaoma.im.entity.UserStatus;
 import com.xiaoma.im.handler.HeatBeatHandler;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -25,11 +25,9 @@ public class HeatBeatHandlerUtils implements HeatBeatHandler {
 
     @Override
     public void process(ChannelHandlerContext ctx) throws Exception {
-        Channel channel = ctx.channel();
-        String id = channel.id().asLongText();
         Long lastReadTime = NettyAttrUtil.getReaderTime(ctx.channel());
         long now = DateUtils.getTimeStamp();
-        SessionSocketUtils.UserStatus userStatus = sessionSocketUtils.getUserStatusById(ctx.channel().id().asLongText());
+        UserStatus userStatus = sessionSocketUtils.getUserStatusById(ctx.channel().id().asLongText());
         if (lastReadTime != null && now - lastReadTime > HEARTBEAT_TIME) {
             if (ObjectUtil.isNotNull(userStatus)) {
                 sessionSocketUtils.removeSessionByAccount(userStatus.getAccount());

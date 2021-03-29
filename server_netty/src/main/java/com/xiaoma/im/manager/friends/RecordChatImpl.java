@@ -38,11 +38,11 @@ public class RecordChatImpl implements HandlerBusiness {
         String[] split = list.split(",");
         Integer id = userInfoMapper.selectOne(new LambdaQueryWrapper<UserDetails>().eq(UserDetails::getUserAccount, split[0])).getId();
         List<PointToPoint> singleList = pointToPointMapper.selectList(new LambdaQueryWrapper<PointToPoint>()
-                .eq(PointToPoint::getReceiverid, id)
-                .and(i -> i.eq(PointToPoint::getSenderid, Integer.valueOf(split[1])))
+                .eq(PointToPoint::getReceiverId, id)
+                .and(i -> i.eq(PointToPoint::getSenderId, Integer.valueOf(split[1])))
                 .or()
-                .eq(PointToPoint::getReceiverid, Integer.valueOf(split[1]))
-                .and(i -> i.eq(PointToPoint::getSenderid, id)));
+                .eq(PointToPoint::getReceiverId, Integer.valueOf(split[1]))
+                .and(i -> i.eq(PointToPoint::getSenderId, id)));
         channelHandlerContext.writeAndFlush(MessagePackage.completePackage(Constants.FRIEND_LIST_MESSAGE, ObjectUtil.serialize(singleList)));
     }
 }

@@ -1,7 +1,9 @@
 package com.xiaoma.im.handler;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.xiaoma.im.constants.Constants;
 import com.xiaoma.im.entity.MessagePackage;
+import com.xiaoma.im.entity.UserStatus;
 import com.xiaoma.im.enums.BusinessHandlerEnum;
 import com.xiaoma.im.manager.HandlerBusiness;
 import com.xiaoma.im.utils.*;
@@ -87,25 +89,18 @@ public class MyServerHandler extends SimpleChannelInboundHandler<MessagePackage>
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         // 可能出现业务判断离线后再次触发 channelInactive
-        Map<String, Object> mapValue = redisTemplateUtils.getMapValue(ctx.channel().id().asLongText());
-        if (!mapValue.isEmpty()) {
-            log.warn("[{}] trigger channelInactive offline!", mapValue.get("userAccount"));
-            redisTemplateUtils.deleteData(new ArrayList<String>() {
-                private static final long serialVersionUID = 6980127040041020089L;
-
-                {
-                    add(Constants.SERVER_ONLINE_AUTH + mapValue.get("userAccount"));
-                }
-            });
-            sessionSocketUtils.removeSession(ctx.channel().id().asLongText());
+        UserStatus userStatus = sessionSocketUtils.getUserStatusById(ctx.channel().id().asLongText());
+        if (ObjectUtil.isNotNull(userStatus)) {
+            log.warn("[{}] trigger channelInactive offline!", userStatus.getAccount());
+            sessionSocketUtils.removeSessionByAccount(userStatus.getAccount());
             ctx.channel().close();
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        String id = ctx.channel().id().asLongText();
-        sessionSocketUtils.removeSession(id);
+        UserStatus userStatus = sessionSocketUtils.getUserStatusById(ctx.channel().id().asLongText());
+        sessionSocketUtils.removeSessionByAccount(userStatus.getAccount());
         ctx.channel().close();
         log.error(" 服务端发送错误！关闭连接！", cause);
     }

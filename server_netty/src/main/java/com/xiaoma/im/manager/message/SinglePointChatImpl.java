@@ -22,14 +22,13 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @Author Xiaoma
  * @Date 2021/2/16 0016 12:10
  * @Email 1468835254@qq.com
  */
+@SuppressWarnings("unchecked")
 @Slf4j
 @Service(value = "send-single")
 public class SinglePointChatImpl implements HandlerBusiness {
@@ -56,16 +55,14 @@ public class SinglePointChatImpl implements HandlerBusiness {
             pointToPointMapper.insert(messageSingle);
             transactionManager.commit(status);
             MessageTypeEnum messageTypeEnum = MessageTypeEnum.getMessageType(messageSingle.getCommandType());
-            ResponseMessageVo responseMessageVo = ResponseMessageVo.builder().messageContent(messageSingle.getMessage()).messageType(messageTypeEnum != null ? messageTypeEnum.getCode() : null).sender(messageSingle.getUserAccount()).receiver(messageSingle.getFriendAccount()).build();
+            ResponseMessageVo responseMessageVo = ResponseMessageVo.builder().messageContent(messageSingle.getMessageContent()).messageType(messageTypeEnum != null ? messageTypeEnum.getCode() : null).sender(messageSingle.getUserAccount()).receiver(messageSingle.getFriendAccount()).build();
             MessagePackage build = MessagePackage.completePackage(Constants.RECEIVED, ObjectUtil.serialize(responseMessageVo));
             if (ObjectUtil.isNotEmpty(channel)) {
                 channelHandlerContext.writeAndFlush(MessagePackage.completePackage(ResponseEnum.RESPONSE_SUCCESS.getCode(), ResponseEnum.RESPONSE_SUCCESS.getMessage().getBytes(StandardCharsets.UTF_8)));
                 channel.writeAndFlush(build);
             } else {
                 // 好友不在线保存至redis列表中
-                if (!redisTemplateUtils.lPushIfPresent(Constants.SERVER_USER_ACCOUNT + messageSingle.getFriendAccount(), build)) {
-                    redisTemplateUtils.setList(Constants.SERVER_USER_ACCOUNT + messageSingle.getFriendAccount(), Collections.singletonList(build));
-                }
+                redisTemplateUtils.rightPush(Constants.SERVER_USER_ACCOUNT + messageSingle.getFriendAccount(), build);
             }
         } catch (Exception e) {
             log.error("好友互相发送消息处理失败! 消息体 = {}", JSON.toJSONString(messageSingle), e);

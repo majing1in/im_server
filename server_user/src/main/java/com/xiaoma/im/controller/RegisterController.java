@@ -28,7 +28,7 @@ import java.util.Collections;
  * @Date 2021/2/6 0006 23:47
  * @Email 1468835254@qq.com
  */
-
+@SuppressWarnings("unchecked")
 @Api("用户注册模块API文档")
 @Slf4j
 @RestController
@@ -61,7 +61,7 @@ public class RegisterController {
         String random = String.valueOf((int) (Math.random() * 9000 + 1000));
         // 设置过期时间 5 分钟
         long expireTime = 5 * 60;
-        redisTemplateUtils.setObject(Constants.SERVER_REGISTER_TIMEOUT + uuid, random, expireTime);
+        redisTemplateUtils.setForTimeMIN(Constants.SERVER_REGISTER_TIMEOUT + uuid, random, expireTime);
         return BaseResponseUtils.getSuccessResponse(random);
     }
 
@@ -76,11 +76,11 @@ public class RegisterController {
             return BaseResponseUtils.getValidResponse();
         }
         String redisKey = Constants.SERVER_REGISTER_TIMEOUT + uuid;
-        String verificationCode = (String) redisTemplateUtils.getObject(redisKey);
+        String verificationCode = (String) redisTemplateUtils.get(redisKey);
         if (StringUtils.isBlank(verificationCode) || !ObjectUtil.equal(verificationCode, userInfoVo.getVerificationCode())) {
             return BaseResponseUtils.getTimeoutResponse();
         }
-        redisTemplateUtils.deleteData(Collections.singletonList(redisKey));
+        redisTemplateUtils.delete(Collections.singletonList(redisKey));
         UserInfo user = userInfoMapper.selectOne(new LambdaQueryWrapper<UserInfo>().eq(UserInfo::getUserAccount, userInfoVo.getUserAccount()));
         if (ObjectUtil.isNotEmpty(user)) {
             return BaseResponseUtils.getFailedResponse();

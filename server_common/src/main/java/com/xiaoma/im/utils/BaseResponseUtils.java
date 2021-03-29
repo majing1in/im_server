@@ -36,4 +36,8 @@ public class BaseResponseUtils {
     public static R<?> getFailedResponse() {
         return R.builder().code(ResponseEnum.RESPONSE_FAIL.getCode()).message(ResponseEnum.RESPONSE_FAIL.getMessage()).build();
     }
+
+    public static R<?> getFailedResponse(String data) {
+        return R.builder().code(ResponseEnum.RESPONSE_FAIL.getCode()).message(ResponseEnum.RESPONSE_FAIL.getMessage()).message(data).build();
+    }
 }

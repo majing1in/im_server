@@ -2,6 +2,8 @@ package com.xiaoma.im.schedule;
 
 import com.xiaoma.im.constants.Constants;
 import com.xiaoma.im.entity.MessagePackage;
+import com.xiaoma.im.entity.UserStatus;
+import com.xiaoma.im.utils.RedisTemplateUtils;
 import com.xiaoma.im.utils.SessionSocketUtils;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,10 @@ import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+/**
+ * @author admin
+ */
+@SuppressWarnings("unchecked")
 @Slf4j
 @Component
 @Configuration
@@ -21,20 +27,20 @@ import java.util.Map;
 public class HeartBeatScheduleTask {
 
     @Resource
-    private SessionSocketUtils sessionSocketUtils;
+    private RedisTemplateUtils redisTemplateUtils;
 
     private static final String HEAT_BEAT = "HEAT_BEAT";
 
-    @Scheduled(fixedRate = 7000)
+    @Scheduled(fixedRate = 10000)
     private void configureTasks() {
-        Map<String, NioSocketChannel> sessionMap = sessionSocketUtils.getSessionMap();
-        sessionMap.keySet().forEach(key -> {
-            NioSocketChannel nioSocketChannel = sessionMap.get(key);
+        Map<String, UserStatus> entries = redisTemplateUtils.getHashEntries(Constants.SERVER_REDIS_LIST);
+        entries.keySet().forEach(key -> {
+            UserStatus userStatus = entries.get(key);
             try {
-                nioSocketChannel.writeAndFlush(MessagePackage.completePackage(Constants.PING, HEAT_BEAT.getBytes(StandardCharsets.UTF_8)));
+                userStatus.getChannel().writeAndFlush(MessagePackage.completePackage(Constants.PING, HEAT_BEAT.getBytes(StandardCharsets.UTF_8)));
             } catch (Exception e) {
-                sessionSocketUtils.removeSession(nioSocketChannel.id().asLongText());
-                nioSocketChannel.close();
+                userStatus.getChannel().close();
+                redisTemplateUtils.delete(Constants.SERVER_REDIS_LIST, userStatus.getAccount());
             }
         });
     }

@@ -7,6 +7,7 @@ import com.xiaoma.im.dao.FriendsInfoMapper;
 import com.xiaoma.im.entity.FriendsInfo;
 import com.xiaoma.im.entity.MessagePackage;
 import com.xiaoma.im.entity.UserInfo;
+import com.xiaoma.im.entity.UserStatus;
 import com.xiaoma.im.enums.CommandType;
 import com.xiaoma.im.enums.ResponseEnum;
 import com.xiaoma.im.response.FriendsResponseDto;
@@ -35,6 +36,7 @@ import java.util.Map;
  * @Date 2021/2/10 0010 15:17
  * @Email 1468835254@qq.com
  */
+@SuppressWarnings("unchecked")
 @Slf4j
 @RestController
 @RequestMapping("/friends")
@@ -98,12 +100,12 @@ public class AboutFriendsController {
         MessagePackage messagePackage = MessagePackage.completePackage(CommandType.COMMAND_APPLY.getCode(), ObjectUtil.serialize(friendsResponseDto));
         String channelId = feignNettyServiceImpl.getChannelId(friendAccount);
         if (StringUtils.isBlank(channelId)) {
-            if (!redisTemplateUtils.lPushIfPresent(Constants.SERVER_USER_ACCOUNT + friendAccount, messagePackage)) {
-                redisTemplateUtils.setList(Constants.SERVER_USER_ACCOUNT + friendAccount, Collections.singletonList(messagePackage));
+            if (redisTemplateUtils.rightPush(Constants.SERVER_USER_ACCOUNT + friendAccount, messagePackage) > 0) {
+                return BaseResponseUtils.getSuccessResponse();
             }
         } else {
-            Map<String, Object> mapValue = redisTemplateUtils.getMapValue(channelId);
-            NioSocketChannel channel = (NioSocketChannel) mapValue.get(Constants.OPTION_VALUE);
+            UserStatus userStatus = (UserStatus) redisTemplateUtils.get(Constants.SERVER_USER_ACCOUNT + friendAccount);
+            NioSocketChannel channel = userStatus.getChannel();
             channel.writeAndFlush(messagePackage);
         }
         log.info("FriendController (applyToFriend) ==> 好友添加操作完成! friendAccount = {} time = {}", friendAccount, LocalDateTime.now());

@@ -22,7 +22,6 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -30,7 +29,7 @@ import java.util.List;
  * @Date 2021/3/27 0027 11:28
  * @Email 1468835254@qq.com
  */
-
+@SuppressWarnings("unchecked")
 @Service("group-send")
 public class GroupChatImpl implements HandlerBusiness {
 
@@ -84,9 +83,7 @@ public class GroupChatImpl implements HandlerBusiness {
             // 不在线直接加入Redis队列中
             if (userDetails.size() > 0) {
                 userDetails.forEach(item -> {
-                    if (!redisTemplateUtils.lPushIfPresent(Constants.SERVER_USER_ACCOUNT + item.getUserAccount(), messagePackage)) {
-                        redisTemplateUtils.setList(Constants.SERVER_USER_ACCOUNT + item.getUserAccount(), Collections.singletonList(messagePackage));
-                    }
+                    redisTemplateUtils.rightPush(Constants.SERVER_USER_ACCOUNT + item.getUserAccount(), messagePackage);
                 });
             }
             transactionManager.commit(status);

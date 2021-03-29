@@ -22,6 +22,7 @@ import java.util.List;
  * @Date 2021/2/16 0016 11:56
  * @Email 1468835254@qq.com
  */
+@SuppressWarnings("unchecked")
 @Slf4j
 @Service(value = "unread-handler")
 public class UnreadChatImpl implements HandlerBusiness {
@@ -32,13 +33,13 @@ public class UnreadChatImpl implements HandlerBusiness {
     @Override
     public void process(byte[] content, ChannelHandlerContext channelHandlerContext) {
         String account = new String(content, StandardCharsets.UTF_8);
-        List<MessagePackage> unreadList = redisTemplateUtils.getList(Constants.SERVER_USER_ACCOUNT + account);
+        List<MessagePackage> unreadList = (List<MessagePackage>) redisTemplateUtils.get(Constants.SERVER_USER_ACCOUNT + account);
         log.info("当前用户 {} 正在获取未读消息...", account);
         if (ObjectUtil.isEmpty(unreadList)) {
             channelHandlerContext.writeAndFlush(MessagePackage.completePackage(ResponseEnum.RESPONSE_NOT_FIND.getCode(), ResponseEnum.RESPONSE_NOT_FIND.getMessage().getBytes(StandardCharsets.UTF_8)));
         } else {
             unreadList.forEach(channelHandlerContext::writeAndFlush);
-            redisTemplateUtils.deleteData(Collections.singletonList(Constants.SERVER_USER_ACCOUNT + account));
+            redisTemplateUtils.delete(Constants.SERVER_USER_ACCOUNT + account);
         }
         log.info("当前用户 {} 获取未读消息完成! 获取消息 = {}", account, JSON.toJSONString(unreadList));
     }

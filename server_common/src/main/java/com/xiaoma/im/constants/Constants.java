@@ -33,6 +33,10 @@ public class Constants {
      */
     public static final String SERVER_USER_ACCOUNT = "server_user_messages_";
 
+    public static final String RED_PACKAGE_ONE_KEY = "red_package_one_key_";
+
+    public static final String RED_PACKAGE_GROUP_KEY = "red_package_group_key_";
+
     public static final int SUCCESS = 1;
     public static final int FAILED = 2;
     /**
@@ -70,6 +74,9 @@ public class Constants {
     public static final int GROUP_LIST = 11;
     public static final int GROUP_LIST_MESSAGE = 12;
     public static final int GROUP_LIST_INFO = 13;
+
+    public static final int RED_PACKAGE_ONE = 14;
+    public static final int RED_PACKAGE_GROUP = 15;
 
     /**
      * 获取好友列表
