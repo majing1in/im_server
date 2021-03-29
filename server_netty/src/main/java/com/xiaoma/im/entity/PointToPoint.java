@@ -1,15 +1,28 @@
 package com.xiaoma.im.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.io.Serializable;
 import java.util.Date;
 
+@TableName("message_single")
 public class PointToPoint implements Serializable {
     private static final long serialVersionUID = 3099345143310168692L;
+
+    @TableId(value = "id",type = IdType.AUTO)
     private Integer id;
 
     private Integer senderId;
 
     private Integer receiverId;
+
+    private String messageContent;
+
+    private Integer messageType;
+
+    private Date createTime;
 
     public PointToPoint() {
     }
@@ -22,12 +35,6 @@ public class PointToPoint implements Serializable {
         this.messageType = messageType;
         this.createTime = createTime;
     }
-
-    private String messageContent;
-
-    private Integer messageType;
-
-    private Date createTime;
 
     public Integer getId() {
         return id;

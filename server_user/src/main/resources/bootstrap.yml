@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: server_user_opt
+    name: server_user
   cloud:
     nacos:
       discovery:
@@ -11,7 +11,7 @@ spring:
         enabled: true
       config:
         server-addr: 127.0.0.1:8848
-        namespace: 36c8ffbf-33c4-412d-80a3-da91e8c77a9c
+        namespace: 900b7505-2763-4d7b-8dd1-20c7dbb62a2f
         enabled: true
         refresh-enabled: true
         file-extension: yml

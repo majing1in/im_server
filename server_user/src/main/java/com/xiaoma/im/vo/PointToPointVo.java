@@ -14,7 +14,6 @@ import java.io.Serializable;
  */
 @Getter
 @Setter
-@Builder
 public class PointToPointVo extends PointToPoint implements Serializable {
 
     private static final long serialVersionUID = 8050477961361618803L;

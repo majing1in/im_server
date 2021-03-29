@@ -3,10 +3,10 @@
 <mapper namespace="com.xiaoma.im.dao.PointToPointMapper">
   <resultMap id="BaseResultMap" type="com.xiaoma.im.entity.PointToPoint">
     <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="senderId" jdbcType="INTEGER" property="senderId" />
-    <result column="receiverId" jdbcType="INTEGER" property="receiverId" />
-    <result column="message" jdbcType="VARCHAR" property="messageContent" />
-    <result column="type" jdbcType="VARCHAR" property="messageType" />
+    <result column="sender_id" jdbcType="INTEGER" property="senderId" />
+    <result column="receiver_id" jdbcType="INTEGER" property="receiverId" />
+    <result column="message_content" jdbcType="VARCHAR" property="messageContent" />
+    <result column="message_type" jdbcType="INTEGER" property="messageType" />
     <result column="create_time" jdbcType="DATE" property="createTime" />
   </resultMap>
 </mapper>

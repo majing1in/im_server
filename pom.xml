@@ -12,7 +12,6 @@
         <module>server_netty</module>
         <module>server_common</module>
         <module>server_user</module>
-        <module>server_http</module>
     </modules>
 
     <properties>
