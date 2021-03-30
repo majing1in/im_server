@@ -16,10 +16,10 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableFeignClients
 @MapperScan({"com.xiaoma.im.dao"})
 @EnableDiscoveryClient
-public class UserOptApplication implements CommandLineRunner {
+public class ServerUserApplication implements CommandLineRunner {
 
     public static void main(String[] args) {
-        SpringApplication.run(UserOptApplication.class, args);
+        SpringApplication.run(ServerUserApplication.class, args);
     }
 
     @Override

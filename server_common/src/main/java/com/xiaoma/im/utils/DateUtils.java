@@ -20,7 +20,7 @@ public class DateUtils {
     }
 
     // 格式化时间
-    public static String  StringToLocalDateTime() {
+    public static String stringToLocalDateTime() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return LocalDateTime.now(ZoneOffset.of("+8")).format(formatter);
     }

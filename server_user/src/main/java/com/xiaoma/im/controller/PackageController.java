@@ -38,6 +38,9 @@ public class PackageController {
     @Resource
     private PlatformTransactionManager transactionManager;
 
+    @Resource
+    private RedisTemplateUtils redisTemplateUtils;
+
     @ApiOperation(value = "生成红包", notes = "生成红包")
     @PostMapping("/generator")
     public R<?> generatorPackage(@RequestBody RedPackage redPackage, @RequestParam("id") Integer id) {

@@ -1,7 +1,6 @@
 package com.xiaoma.im.handler;
 
 import cn.hutool.core.util.ObjectUtil;
-import com.xiaoma.im.constants.Constants;
 import com.xiaoma.im.entity.MessagePackage;
 import com.xiaoma.im.entity.UserStatus;
 import com.xiaoma.im.enums.BusinessHandlerEnum;
@@ -17,7 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 

@@ -165,7 +165,11 @@ public class PackageServiceImpl implements PackageService {
     @Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED)
     @Override
     public boolean getGroupPackage(String redPackageId, String account) {
-        RLock rLock = redissonClient.getLock(REDIS_LOCK);
+        if (!redisTemplateUtils.hasKey(Constants.RED_PACKAGE_GROUP_KEY + redPackageId)) {
+            log.info("红包 {} 不存在直接返回...", redPackageId);
+            return false;
+        }
+        RLock rLock = redissonClient.getLock(REDIS_LOCK + redPackageId);
         try {
             rLock.lock();
             log.info("用户 {} 获取锁开始抢红包操作...", account);
@@ -176,6 +180,7 @@ public class PackageServiceImpl implements PackageService {
             }
             if (redPackage.getCount() == 1) {
                 BigDecimal addUp = userMoney.getMoney().add(redPackage.getAmount()).setScale(2, BigDecimal.ROUND_HALF_UP);
+                redisTemplateUtils.delete(Constants.RED_PACKAGE_GROUP_KEY + redPackageId);
                 return this.updateMoney(userMoney, addUp);
             }
             BigDecimal minDecimal = redPackage.getAmount().divide(new BigDecimal(redPackage.getCount()), 2, RoundingMode.HALF_UP).divide(new BigDecimal(5), 2, RoundingMode.HALF_UP);

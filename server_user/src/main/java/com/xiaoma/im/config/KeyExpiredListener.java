@@ -17,6 +17,6 @@ public class KeyExpiredListener extends KeyExpirationEventMessageListener {
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
-        log.info("过期key:{}", message.toString());
+
     }
 }
