@@ -10,12 +10,17 @@ import com.xiaoma.im.enums.CommandType;
 import com.xiaoma.im.service.PackageService;
 import com.xiaoma.im.service.UserInfoService;
 import com.xiaoma.im.utils.RedisTemplateUtils;
+import com.xiaoma.im.utils.SqlUtils;
 import com.xiaoma.im.utils.UuidUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -24,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Slf4j
 @SuppressWarnings("unchecked")
 @Service
 public class PackageServiceImpl implements PackageService {
@@ -54,6 +60,9 @@ public class PackageServiceImpl implements PackageService {
     @Resource
     private RedissonClient redissonClient;
 
+    @Resource
+    private PlatformTransactionManager platformTransactionManager;
+
     @Override
     public boolean updateMoney(UserMoney userMoney, BigDecimal bigDecimal) {
         userMoney.setMoney(bigDecimal);
@@ -73,7 +82,6 @@ public class PackageServiceImpl implements PackageService {
         pointToPoint.setMessageContent(redPackageId);
         pointToPoint.setSenderId(sender.getId());
         pointToPoint.setReceiverId(receiver.getId());
-        // 插入到历史消息列表
         pointToPointMapper.insert(pointToPoint);
         if (redisTemplateUtils.setIfAbsent(Constants.RED_PACKAGE_ONE_KEY + redPackageId, redPackage, 1, TimeUnit.DAYS)) {
             UserStatus userStatus = (UserStatus) redisTemplateUtils.getHashKey(Constants.SERVER_REDIS_LIST, Constants.SERVER_ONLINE + receiver.getUserAccount());
@@ -91,7 +99,6 @@ public class PackageServiceImpl implements PackageService {
     @Override
     public boolean generatorGroupPackage(RedPackage redPackage, Integer id) {
         UserInfo sender = userInfoService.getUserInfoServiceByAccount(redPackage.getRedPackageOwner());
-        // 获取所有用户id
         List<MessageGroupUsers> groupUsers = groupUsersMapper.selectList(new LambdaUpdateWrapper<MessageGroupUsers>().eq(MessageGroupUsers::getGroupId, id));
         List<Integer> userIds = groupUsers.stream().map(MessageGroupUsers::getUserId).collect(Collectors.toList());
         List<UserInfo> userInfos = userInfoMapper.selectBatchIds(userIds);
@@ -132,17 +139,27 @@ public class PackageServiceImpl implements PackageService {
 
     @Override
     public boolean getSinglePackage(String redPackageId, String account) {
-        RedPackage redPackage = (RedPackage) redisTemplateUtils.get(Constants.RED_PACKAGE_ONE_KEY + redPackageId);
-        if (ObjectUtil.isNull(redPackage)) {
+        TransactionStatus transaction = platformTransactionManager.getTransaction(new DefaultTransactionDefinition());
+        try {
+            RedPackage redPackage = (RedPackage) redisTemplateUtils.get(Constants.RED_PACKAGE_ONE_KEY + redPackageId);
+            if (ObjectUtil.isNull(redPackage)) {
+                return false;
+            }
+            UserMoney userMoney = userMoneyMapper.getUserMoney(SqlUtils.buildSqlForUserMoney(account));
+            BigDecimal bigDecimal = userMoney.getMoney().add(redPackage.getAmount());
+            if (this.updateMoney(userMoney, bigDecimal)) {
+                redisTemplateUtils.delete(Constants.RED_PACKAGE_ONE_KEY + redPackageId);
+                platformTransactionManager.commit(transaction);
+                log.info("用户 {} 获取红包成功！, redPackageId = {}", account, redPackageId);
+                return true;
+            } else {
+                log.info("用户 {} 获取红包失败！, redPackageId = {}", account, redPackageId);
+                throw new RuntimeException();
+            }
+        } catch (Exception e) {
+            platformTransactionManager.rollback(transaction);
             return false;
         }
-        UserMoney userMoney = userMoneyMapper.getUserMoney(this.buildSqlForUserMoney(account));
-        BigDecimal bigDecimal = userMoney.getMoney().add(redPackage.getAmount());
-        if (this.updateMoney(userMoney, bigDecimal)) {
-            redisTemplateUtils.delete(Constants.RED_PACKAGE_ONE_KEY + redPackageId);
-            return true;
-        }
-        return false;
     }
 
     @Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED)
@@ -151,8 +168,9 @@ public class PackageServiceImpl implements PackageService {
         RLock rLock = redissonClient.getLock(REDIS_LOCK);
         try {
             rLock.lock();
+            log.info("用户 {} 获取锁开始抢红包操作...", account);
             RedPackage redPackage = (RedPackage) redisTemplateUtils.get(Constants.RED_PACKAGE_GROUP_KEY + redPackageId);
-            UserMoney userMoney = userMoneyMapper.getUserMoney(this.buildSqlForUserMoney(account));
+            UserMoney userMoney = userMoneyMapper.getUserMoney(SqlUtils.buildSqlForUserMoney(account));
             if (redPackage.getList().contains(userMoney.getUid())) {
                 return false;
             }
@@ -180,19 +198,17 @@ public class PackageServiceImpl implements PackageService {
             redPackage.setAmount(remaining);
             redPackage.setCount(redPackage.getCount() - 1);
             redisTemplateUtils.set(Constants.RED_PACKAGE_GROUP_KEY + redPackageId, redPackage);
+            log.info("用户 {} 获取锁抢红包操作完成...", account);
             return true;
         } finally {
             // 是否还是锁定状态
             if (rLock.isLocked()) {
                 if (rLock.isHeldByCurrentThread()) {
                     rLock.unlock();
+                    log.info("用户 {} 用户抢红包释放锁资源...", account);
                 }
             }
         }
-    }
-
-    private String buildSqlForUserMoney(String account) {
-        return "SELECT * from user_money WHERE uid = (SELECT id from user_info WHERE user_account ='" + account + "')";
     }
 
 }
