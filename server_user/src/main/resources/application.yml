@@ -10,6 +10,23 @@ spring:
     database: 0
     password: 123456
 
+rocketmq:
+  name-server: 127.0.0.1:9876
+  producer:
+    group: im-producer-group
+    send-message-timeout: 10000
+    compress-message-body-threshold: 4096
+    max-message-size: 4194304
+    retry-times-when-send-failed: 2
+    retry-times-when-send-async-failed: 2
+    retry-next-server: false
+    enable-msg-trace: true
+    customized-trace-topic: RMQ_SYS_TRACE_TOPIC
+
 logging:
   level:
     com.xiaoma.im : debug
+
+mq:
+  topic: mq_topic_consumer
+  group: mq_group_consumer

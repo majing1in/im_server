@@ -3,13 +3,13 @@ package com.xiaoma.im.manager.friends;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xiaoma.im.constants.Constants;
-import com.xiaoma.im.dao.MessageGroupMapper;
-import com.xiaoma.im.dao.MessageGroupUsersMapper;
-import com.xiaoma.im.dao.UserInfoMapper;
-import com.xiaoma.im.entity.MessageGroup;
-import com.xiaoma.im.entity.MessageGroupUsers;
+import com.xiaoma.im.dao.GroupInformationMapper;
+import com.xiaoma.im.dao.GroupFriendsMapper;
+import com.xiaoma.im.dao.UserInformationMapper;
+import com.xiaoma.im.entity.GroupInformation;
+import com.xiaoma.im.entity.GroupFriends;
 import com.xiaoma.im.entity.MessagePackage;
-import com.xiaoma.im.entity.UserDetails;
+import com.xiaoma.im.entity.UserInformation;
 import com.xiaoma.im.manager.HandlerBusiness;
 import com.xiaoma.im.vo.ResponseGroupChatVo;
 import io.netty.channel.ChannelHandlerContext;
@@ -31,23 +31,23 @@ import java.util.List;
 public class GroupInfoImpl implements HandlerBusiness {
 
     @Resource
-    private MessageGroupUsersMapper groupUsersMapper;
+    private GroupFriendsMapper groupUsersMapper;
 
     @Resource
-    private MessageGroupMapper groupMapper;
+    private GroupInformationMapper groupMapper;
 
     @Resource
-    private UserInfoMapper userInfoMapper;
+    private UserInformationMapper userInformationMapper;
 
     @Override
     public void process(byte[] content, ChannelHandlerContext channelHandlerContext) {
         Integer groupId = Integer.parseInt(new String(content, StandardCharsets.UTF_8));
-        MessageGroup group = groupMapper.selectOne(new LambdaQueryWrapper<MessageGroup>().eq(MessageGroup::getGroupId, groupId));
-        List<MessageGroupUsers> groupUsers = groupUsersMapper.selectList(new LambdaQueryWrapper<MessageGroupUsers>().eq(MessageGroupUsers::getGroupId, groupId));
+        GroupInformation group = groupMapper.selectOne(new LambdaQueryWrapper<GroupInformation>().eq(GroupInformation::getGroupId, groupId));
+        List<GroupFriends> groupUsers = groupUsersMapper.selectList(new LambdaQueryWrapper<GroupFriends>().eq(GroupFriends::getGroupId, groupId));
         List<Integer> userIds = new ArrayList<>();
         groupUsers.forEach(item -> userIds.add(item.getUserId()));
         // 获取该群所有用户
-        List<UserDetails> userDetails = userInfoMapper.selectBatchIds(userIds);
+        List<UserInformation> userDetails = userInformationMapper.selectBatchIds(userIds);
         ResponseGroupChatVo vo = new ResponseGroupChatVo();
         vo.setGroupName(group.getGroupName());
         vo.setGroupSign(group.getGroupSign());

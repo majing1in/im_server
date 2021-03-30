@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoma.im.dao.UserInformationMapper">
+  <resultMap id="BaseResultMap" type="com.xiaoma.im.entity.UserInformation">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="user_account" jdbcType="VARCHAR" property="userAccount" />
+    <result column="user_password" jdbcType="VARCHAR" property="userPassword" />
+    <result column="user_nick_name" jdbcType="VARCHAR" property="userNickName" />
+    <result column="user_sign" jdbcType="VARCHAR" property="userSign" />
+    <result column="user_gender" jdbcType="INTEGER" property="userGender" />
+    <result column="user_birthday" jdbcType="DATE" property="userBirthday" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="user_email" jdbcType="VARCHAR" property="userEmail" />
+    <result column="user_head_photo" jdbcType="VARCHAR" property="userHeadPhoto" />
+    <result column="user_school_tag" jdbcType="VARCHAR" property="userSchoolTag" />
+    <result column="user_constellation" jdbcType="INTEGER" property="userConstellation" />
+    <result column="create_time" jdbcType="DATE" property="createTime" />
+    <result column="update_time" jdbcType="DATE" property="updateTime" />
+  </resultMap>
+</mapper>

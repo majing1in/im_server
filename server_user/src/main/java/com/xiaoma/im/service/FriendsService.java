@@ -1,6 +1,6 @@
 package com.xiaoma.im.service;
 
-import com.xiaoma.im.entity.FriendsInfo;
+import com.xiaoma.im.entity.FriendsRelationship;
 
 import java.util.List;
 
@@ -11,5 +11,5 @@ import java.util.List;
  */
 public interface FriendsService {
 
-    List<FriendsInfo> getFriendsList(Integer userId);
+    List<FriendsRelationship> getFriendsList(Integer userId);
 }

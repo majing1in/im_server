@@ -11,7 +11,7 @@ spring:
         enabled: true
       config:
         server-addr: 127.0.0.1:8848
-        namespace: 900b7505-2763-4d7b-8dd1-20c7dbb62a2f
+        namespace: 6b4999c9-4b7d-4822-84af-d25ba4098757
         enabled: true
         refresh-enabled: true
         file-extension: yml

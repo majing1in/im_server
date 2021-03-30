@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
 
-@TableName("message_single")
+@TableName("private_chat_list")
 public class PointToPoint implements Serializable {
     private static final long serialVersionUID = 3099345143310168692L;
 

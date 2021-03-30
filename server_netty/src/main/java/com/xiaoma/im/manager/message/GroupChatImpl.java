@@ -3,16 +3,16 @@ package com.xiaoma.im.manager.message;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xiaoma.im.constants.Constants;
-import com.xiaoma.im.dao.MessageGroupChatMapper;
-import com.xiaoma.im.dao.MessageGroupUsersMapper;
-import com.xiaoma.im.dao.UserInfoMapper;
-import com.xiaoma.im.entity.MessageGroupUsers;
+import com.xiaoma.im.dao.GroupChatListMapper;
+import com.xiaoma.im.dao.GroupFriendsMapper;
+import com.xiaoma.im.dao.UserInformationMapper;
+import com.xiaoma.im.entity.GroupFriends;
 import com.xiaoma.im.entity.MessagePackage;
-import com.xiaoma.im.entity.UserDetails;
+import com.xiaoma.im.entity.UserInformation;
 import com.xiaoma.im.manager.HandlerBusiness;
 import com.xiaoma.im.utils.RedisTemplateUtils;
 import com.xiaoma.im.utils.SessionSocketUtils;
-import com.xiaoma.im.vo.GroupChatVo;
+import com.xiaoma.im.vo.GroupChatListVo;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.springframework.stereotype.Service;
@@ -34,13 +34,13 @@ import java.util.List;
 public class GroupChatImpl implements HandlerBusiness {
 
     @Resource
-    private MessageGroupChatMapper groupChatMapper;
+    private GroupChatListMapper groupChatMapper;
 
     @Resource
-    private MessageGroupUsersMapper usersMapper;
+    private GroupFriendsMapper usersMapper;
 
     @Resource
-    private UserInfoMapper userInfoMapper;
+    private UserInformationMapper userInformationMapper;
 
     @Resource
     private SessionSocketUtils sessionSocketUtils;
@@ -53,17 +53,17 @@ public class GroupChatImpl implements HandlerBusiness {
 
     @Override
     public void process(byte[] content, ChannelHandlerContext channelHandlerContext) {
-        GroupChatVo groupChatVo = ObjectUtil.deserialize(content);
+        GroupChatListVo groupChatVo = ObjectUtil.deserialize(content);
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         try {
             groupChatMapper.insert(groupChatVo);
-            List<MessageGroupUsers> groupUsers = usersMapper.selectList(new LambdaQueryWrapper<MessageGroupUsers>().eq(MessageGroupUsers::getGroupId, groupChatVo.getGroupId()));
+            List<GroupFriends> groupUsers = usersMapper.selectList(new LambdaQueryWrapper<GroupFriends>().eq(GroupFriends::getGroupId, groupChatVo.getGroupId()));
             List<Integer> userIds = new ArrayList<>();
             groupUsers.forEach(item -> {
                 userIds.add(item.getUserId());
             });
             // 封装消息包
-            GroupChatVo chatVo = new GroupChatVo();
+            GroupChatListVo chatVo = new GroupChatListVo();
             chatVo.setUserNickName(groupChatVo.getUserNickName());
             chatVo.setMessageType(groupChatVo.getMessageType());
             chatVo.setGroupId(groupChatVo.getGroupId());
@@ -71,7 +71,7 @@ public class GroupChatImpl implements HandlerBusiness {
             chatVo.setCreateTime(groupChatVo.getCreateTime());
             MessagePackage messagePackage = MessagePackage.completePackage(Constants.RECEIVED, ObjectUtil.serialize(chatVo));
             // 获取在当前group中的用户
-            List<UserDetails> userDetails = userInfoMapper.selectBatchIds(userIds);
+            List<UserInformation> userDetails = userInformationMapper.selectBatchIds(userIds);
             // 获取用户是否在线关联关系
             for (int i = userDetails.size() - 1; i >= 0; i--) {
                 NioSocketChannel socketChannel = sessionSocketUtils.getUserNioSocketChannelByAccount(userDetails.get(i).getUserAccount());

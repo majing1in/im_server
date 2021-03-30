@@ -1,8 +1,8 @@
 package com.xiaoma.im.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.xiaoma.im.dao.UserInfoMapper;
-import com.xiaoma.im.entity.UserInfo;
+import com.xiaoma.im.dao.UserInformationMapper;
+import com.xiaoma.im.entity.UserInformation;
 import com.xiaoma.im.service.UserInfoService;
 import org.springframework.stereotype.Service;
 
@@ -18,21 +18,21 @@ import javax.annotation.Resource;
 public class UserInfoImpl implements UserInfoService {
 
     @Resource
-    private UserInfoMapper userInfoMapper;
+    private UserInformationMapper userInformationMapper;
 
     @Override
-    public UserInfo getUserInfoServiceById(Integer id) {
-        return userInfoMapper.selectById(id);
+    public UserInformation getUserInfoServiceById(Integer id) {
+        return userInformationMapper.selectById(id);
     }
 
     @Override
-    public UserInfo getUserInfoServiceByAccount(String userAccount) {
-        return userInfoMapper.selectOne(new LambdaQueryWrapper<UserInfo>().eq(UserInfo::getUserAccount, userAccount));
+    public UserInformation getUserInfoServiceByAccount(String userAccount) {
+        return userInformationMapper.selectOne(new LambdaQueryWrapper<UserInformation>().eq(UserInformation::getUserAccount, userAccount));
     }
 
     @Override
-    public boolean updateUserInfo(UserInfo userInfo) {
-        int result = userInfoMapper.updateById(userInfo);
+    public boolean updateUserInfo(UserInformation userInformation) {
+        int result = userInformationMapper.updateById(userInformation);
         return result > 0;
     }
 

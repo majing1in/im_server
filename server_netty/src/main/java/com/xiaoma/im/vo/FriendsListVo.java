@@ -1,6 +1,6 @@
 package com.xiaoma.im.vo;
 
-import com.xiaoma.im.entity.UserDetails;
+import com.xiaoma.im.entity.UserInformation;
 import lombok.*;
 
 import java.io.Serializable;
@@ -16,7 +16,7 @@ import java.util.Date;
 @Getter
 @Setter
 @Builder
-public class FriendsListVo extends UserDetails implements Serializable {
+public class FriendsListVo extends UserInformation implements Serializable {
 
     private static final long serialVersionUID = -1333651779662337960L;
 

@@ -2,7 +2,7 @@ package com.xiaoma.im.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.xiaoma.im.constants.Constants;
-import com.xiaoma.im.dao.UserMoneyMapper;
+import com.xiaoma.im.dao.UserBalanceMoneyMapper;
 import com.xiaoma.im.entity.*;
 import com.xiaoma.im.service.PackageService;
 import com.xiaoma.im.utils.BaseResponseUtils;
@@ -30,7 +30,7 @@ import java.util.ArrayList;
 public class PackageController {
 
     @Resource
-    private UserMoneyMapper userMoneyMapper;
+    private UserBalanceMoneyMapper userBalanceMoneyMapper;
 
     @Resource
     private PackageService packageService;
@@ -46,8 +46,8 @@ public class PackageController {
     public R<?> generatorPackage(@RequestBody RedPackage redPackage, @RequestParam("id") Integer id) {
         log.info("红包生成开始 ==> redPackage = {}, id = {}", JSON.toJSONString(redPackage), id);
         redPackage.setList(new ArrayList<>());
-        UserMoney userMoney = userMoneyMapper.getUserMoney(SqlUtils.buildSqlForUserMoney(redPackage.getRedPackageOwner()));
-        Integer verificationData = packageService.verificationData(userMoney, redPackage);
+        UserBalanceMoney userBalanceMoney = userBalanceMoneyMapper.getUserMoney(SqlUtils.buildSqlForUserMoney(redPackage.getRedPackageOwner()));
+        Integer verificationData = packageService.verificationData(userBalanceMoney, redPackage);
         if (verificationData != 0) {
             log.error("红包余额不足或数量过大！redPackage = {}, id = {}", JSON.toJSONString(redPackage), id);
             return verificationData == 1 ? BaseResponseUtils.getFailedResponse("余额不足！") : BaseResponseUtils.getFailedResponse("红包数量太大！");
@@ -55,7 +55,7 @@ public class PackageController {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         try {
             R<?> result;
-            if (!packageService.updateMoney(userMoney, userMoney.getMoney().subtract(redPackage.getAmount()))) {
+            if (!packageService.updateMoney(userBalanceMoney, userBalanceMoney.getMoney().subtract(redPackage.getAmount()))) {
                 log.error("红包生成失败！redPackage = {}, id = {}", JSON.toJSONString(redPackage), id);
                 return BaseResponseUtils.getFailedResponse("生成红包失败！");
             }

@@ -3,7 +3,7 @@ package com.xiaoma.im.manager.message;
 import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
 import com.xiaoma.im.constants.Constants;
-import com.xiaoma.im.dao.PointToPointMapper;
+import com.xiaoma.im.dao.PrivateChatListMapper;
 import com.xiaoma.im.entity.MessagePackage;
 import com.xiaoma.im.enums.MessageTypeEnum;
 import com.xiaoma.im.enums.ResponseEnum;
@@ -34,7 +34,7 @@ import java.nio.charset.StandardCharsets;
 public class SinglePointChatImpl implements HandlerBusiness {
 
     @Resource
-    private PointToPointMapper pointToPointMapper;
+    private PrivateChatListMapper privateChatListMapper;
 
     @Resource
     private SessionSocketUtils sessionSocketUtils;
@@ -52,7 +52,7 @@ public class SinglePointChatImpl implements HandlerBusiness {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         try {
             // 先对消息进行持久化
-            pointToPointMapper.insert(messageSingle);
+            privateChatListMapper.insert(messageSingle);
             transactionManager.commit(status);
             MessageTypeEnum messageTypeEnum = MessageTypeEnum.getMessageType(messageSingle.getCommandType());
             ResponseMessageVo responseMessageVo = ResponseMessageVo.builder().messageContent(messageSingle.getMessageContent()).messageType(messageTypeEnum != null ? messageTypeEnum.getCode() : null).sender(messageSingle.getUserAccount()).receiver(messageSingle.getFriendAccount()).build();

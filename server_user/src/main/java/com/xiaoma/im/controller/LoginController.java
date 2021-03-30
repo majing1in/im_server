@@ -3,11 +3,10 @@ package com.xiaoma.im.controller;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xiaoma.im.constants.Constants;
-import com.xiaoma.im.dao.UserInfoMapper;
-import com.xiaoma.im.entity.UserInfo;
+import com.xiaoma.im.dao.UserInformationMapper;
+import com.xiaoma.im.entity.UserInformation;
 import com.xiaoma.im.entity.UserStatus;
 import com.xiaoma.im.spi.FeignNettyServiceImpl;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,6 @@ import com.xiaoma.im.utils.*;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.Map;
 
 /**
  * @Author Xiaoma
@@ -33,7 +31,7 @@ import java.util.Map;
 public class LoginController {
 
     @Resource
-    private UserInfoMapper userInfoMapper;
+    private UserInformationMapper userInformationMapper;
 
     @Resource
     private RedisTemplateUtils redisTemplateUtils;
@@ -43,37 +41,37 @@ public class LoginController {
 
     @ApiOperation("用户单点登录")
     @PostMapping("/login")
-    public R<?> userLogin(@RequestBody UserInfo userInfo) {
-        if (ObjectUtil.isEmpty(userInfo) || StringUtils.isBlank(userInfo.getUserAccount()) || StringUtils.isBlank(userInfo.getUserPassword())) {
+    public R<?> userLogin(@RequestBody UserInformation userInformation) {
+        if (ObjectUtil.isEmpty(userInformation) || StringUtils.isBlank(userInformation.getUserAccount()) || StringUtils.isBlank(userInformation.getUserPassword())) {
             return BaseResponseUtils.getValidResponse();
         }
-        UserInfo user = userInfoMapper.selectOne(new LambdaQueryWrapper<UserInfo>()
-                .eq(UserInfo::getUserAccount, userInfo.getUserAccount())
-                .and(item -> item.eq(UserInfo::getUserPassword, userInfo.getUserPassword())));
+        UserInformation user = userInformationMapper.selectOne(new LambdaQueryWrapper<UserInformation>()
+                .eq(UserInformation::getUserAccount, userInformation.getUserAccount())
+                .and(item -> item.eq(UserInformation::getUserPassword, userInformation.getUserPassword())));
         if (ObjectUtil.isEmpty(user)) {
             return BaseResponseUtils.getNotFoundResponse();
         }
         String channelId = feignNettyServiceImpl.getChannelId(user.getUserAccount());
-        String auth = (String) redisTemplateUtils.get(Constants.SERVER_ONLINE_AUTH + userInfo.getUserAccount());
+        String auth = (String) redisTemplateUtils.get(Constants.SERVER_ONLINE_AUTH + userInformation.getUserAccount());
         // 删除以前权限
         if (StringUtils.isNotEmpty(auth)) {
-            redisTemplateUtils.delete(Collections.singletonList(Constants.SERVER_ONLINE_AUTH + userInfo.getUserAccount()));
+            redisTemplateUtils.delete(Collections.singletonList(Constants.SERVER_ONLINE_AUTH + userInformation.getUserAccount()));
         }
         // 获取通道id
         if (ObjectUtil.isNotEmpty(channelId)) {
-            UserStatus userStatus = (UserStatus) redisTemplateUtils.getHashKey(Constants.SERVER_REDIS_LIST ,Constants.SERVER_ONLINE + userInfo.getUserAccount());
+            UserStatus userStatus = (UserStatus) redisTemplateUtils.getHashKey(Constants.SERVER_REDIS_LIST ,Constants.SERVER_ONLINE + userInformation.getUserAccount());
             userStatus.getChannel().close();
             // 关闭通道，删除权限
-            redisTemplateUtils.delete(Collections.singletonList(Constants.SERVER_ONLINE_AUTH + userInfo.getUserAccount()));
-            if (!feignNettyServiceImpl.deleteChannelId(userInfo.getUserAccount())) {
-                log.info("用户登录失败 ==> deleteChannelId ! account = {}， time = {}", userInfo.getUserAccount(), LocalDateTime.now());
+            redisTemplateUtils.delete(Collections.singletonList(Constants.SERVER_ONLINE_AUTH + userInformation.getUserAccount()));
+            if (!feignNettyServiceImpl.deleteChannelId(userInformation.getUserAccount())) {
+                log.info("用户登录失败 ==> deleteChannelId ! account = {}， time = {}", userInformation.getUserAccount(), LocalDateTime.now());
                 return BaseResponseUtils.getFailedResponse();
             }
         }
         String token = MD5Util.convertMD5(UuidUtils.getUuid());
         // 设置权限
-        redisTemplateUtils.set(Constants.SERVER_ONLINE_AUTH + userInfo.getUserAccount(), token);
-        log.info("用户登录成功! account = {}， time = {}", userInfo.getUserAccount(), LocalDateTime.now());
+        redisTemplateUtils.set(Constants.SERVER_ONLINE_AUTH + userInformation.getUserAccount(), token);
+        log.info("用户登录成功! account = {}， time = {}", userInformation.getUserAccount(), LocalDateTime.now());
         return BaseResponseUtils.getSuccessResponse(token);
     }
 

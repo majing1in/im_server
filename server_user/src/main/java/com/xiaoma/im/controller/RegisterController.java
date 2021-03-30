@@ -3,13 +3,13 @@ package com.xiaoma.im.controller;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xiaoma.im.constants.Constants;
-import com.xiaoma.im.dao.UserInfoMapper;
-import com.xiaoma.im.entity.UserInfo;
+import com.xiaoma.im.dao.UserInformationMapper;
+import com.xiaoma.im.entity.UserInformation;
 import com.xiaoma.im.utils.BaseResponseUtils;
 import com.xiaoma.im.utils.DateUtils;
 import com.xiaoma.im.utils.R;
 import com.xiaoma.im.utils.RedisTemplateUtils;
-import com.xiaoma.im.vo.UserInfoVo;
+import com.xiaoma.im.vo.UserInformationVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,7 @@ import java.util.Collections;
 public class RegisterController {
 
     @Resource
-    private UserInfoMapper userInfoMapper;
+    private UserInformationMapper userInformationMapper;
 
     @Resource
     private RedisTemplateUtils redisTemplateUtils;
@@ -67,7 +67,7 @@ public class RegisterController {
 
     @ApiOperation("注册用户")
     @PostMapping("/register")
-    public R<?> userRegister(@RequestBody UserInfoVo userInfoVo, HttpServletRequest request) {
+    public R<?> userRegister(@RequestBody UserInformationVo userInfoVo, HttpServletRequest request) {
         if (ObjectUtil.isEmpty(userInfoVo) || StringUtils.isBlank(userInfoVo.getUserAccount()) || StringUtils.isBlank(userInfoVo.getUserPassword()) || StringUtils.isBlank(userInfoVo.getVerificationCode())) {
             return BaseResponseUtils.getValidResponse();
         }
@@ -81,7 +81,7 @@ public class RegisterController {
             return BaseResponseUtils.getTimeoutResponse();
         }
         redisTemplateUtils.delete(Collections.singletonList(redisKey));
-        UserInfo user = userInfoMapper.selectOne(new LambdaQueryWrapper<UserInfo>().eq(UserInfo::getUserAccount, userInfoVo.getUserAccount()));
+        UserInformation user = userInformationMapper.selectOne(new LambdaQueryWrapper<UserInformation>().eq(UserInformation::getUserAccount, userInfoVo.getUserAccount()));
         if (ObjectUtil.isNotEmpty(user)) {
             return BaseResponseUtils.getFailedResponse();
         }

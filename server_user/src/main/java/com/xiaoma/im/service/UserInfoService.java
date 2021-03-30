@@ -1,6 +1,6 @@
 package com.xiaoma.im.service;
 
-import com.xiaoma.im.entity.UserInfo;
+import com.xiaoma.im.entity.UserInformation;
 
 /**
  * @Author Xiaoma
@@ -9,9 +9,9 @@ import com.xiaoma.im.entity.UserInfo;
  */
 public interface UserInfoService {
 
-    UserInfo getUserInfoServiceById(Integer id);
+    UserInformation getUserInfoServiceById(Integer id);
 
-    UserInfo getUserInfoServiceByAccount(String userAccount);
+    UserInformation getUserInfoServiceByAccount(String userAccount);
 
-    boolean updateUserInfo(UserInfo userInfo);
+    boolean updateUserInfo(UserInformation userInformation);
 }

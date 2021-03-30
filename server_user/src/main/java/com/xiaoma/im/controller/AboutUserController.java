@@ -2,7 +2,7 @@ package com.xiaoma.im.controller;
 
 import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
-import com.xiaoma.im.entity.UserInfo;
+import com.xiaoma.im.entity.UserInformation;
 import com.xiaoma.im.service.UserInfoService;
 import com.xiaoma.im.utils.BaseResponseUtils;
 import com.xiaoma.im.utils.R;
@@ -28,17 +28,17 @@ public class AboutUserController {
     @ApiOperation("获取用户个人详情")
     @GetMapping("/info")
     public R<?> getUserInfo(@RequestParam("id") Integer id) {
-        UserInfo userInfo = this.userInfoService.getUserInfoServiceById(id);
-        if (ObjectUtil.isEmpty(userInfo)) {
+        UserInformation userInformation = this.userInfoService.getUserInfoServiceById(id);
+        if (ObjectUtil.isEmpty(userInformation)) {
             return BaseResponseUtils.getNotFoundResponse();
         }
-        return BaseResponseUtils.getSuccessResponse(JSON.toJSONString(userInfo));
+        return BaseResponseUtils.getSuccessResponse(JSON.toJSONString(userInformation));
     }
 
     @ApiOperation("修改用户个人详情")
     @GetMapping("/update")
-    public R<?> updateUserInfo(@RequestBody UserInfo userInfo) {
-        boolean result = userInfoService.updateUserInfo(userInfo);
+    public R<?> updateUserInfo(@RequestBody UserInformation userInformation) {
+        boolean result = userInfoService.updateUserInfo(userInformation);
         if (!result) {
             return BaseResponseUtils.getFailedResponse();
         }

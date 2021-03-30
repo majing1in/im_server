@@ -3,10 +3,10 @@ package com.xiaoma.im.controller;
 import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
 import com.xiaoma.im.constants.Constants;
-import com.xiaoma.im.dao.FriendsInfoMapper;
-import com.xiaoma.im.entity.FriendsInfo;
+import com.xiaoma.im.dao.FriendsRelationshipMapper;
+import com.xiaoma.im.entity.FriendsRelationship;
 import com.xiaoma.im.entity.MessagePackage;
-import com.xiaoma.im.entity.UserInfo;
+import com.xiaoma.im.entity.UserInformation;
 import com.xiaoma.im.entity.UserStatus;
 import com.xiaoma.im.enums.CommandType;
 import com.xiaoma.im.enums.ResponseEnum;
@@ -27,9 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @Author Xiaoma
@@ -46,7 +44,7 @@ public class AboutFriendsController {
     private FriendsServiceImpl friendService;
 
     @Resource
-    private FriendsInfoMapper friendsInfoMapper;
+    private FriendsRelationshipMapper friendsRelationshipMapper;
 
     @Resource
     private FeignNettyServiceImpl feignNettyServiceImpl;
@@ -72,7 +70,7 @@ public class AboutFriendsController {
             log.info("FriendController (getFriends) ==> 参数校验失败! time = {}", LocalDateTime.now());
             return BaseResponseUtils.getFailedResponse();
         }
-        List<FriendsInfo> friendsList = friendService.getFriendsList(userId);
+        List<FriendsRelationship> friendsList = friendService.getFriendsList(userId);
         log.info("FriendController (getFriends) ==> 获取好友列表成功! friends = {} time = {}", JSON.toJSONString(friendsList), LocalDateTime.now());
         return BaseResponseUtils.getSuccessResponse();
     }
@@ -91,12 +89,12 @@ public class AboutFriendsController {
             log.info("FriendController (applyToFriend) ==> 参数校验失败! time = {}", LocalDateTime.now());
             return BaseResponseUtils.getValidResponse();
         }
-        UserInfo userInfo = userInfoService.getUserInfoServiceByAccount(userAccount);
-        UserInfo friendInfo = userInfoService.getUserInfoServiceByAccount(friendAccount);
+        UserInformation userInformation = userInfoService.getUserInfoServiceByAccount(userAccount);
+        UserInformation friendInfo = userInfoService.getUserInfoServiceByAccount(friendAccount);
         if (ObjectUtil.isEmpty(friendInfo)) {
             return BaseResponseUtils.getNotFoundResponse();
         }
-        FriendsResponseDto friendsResponseDto = FriendsResponseDto.completeFriendDto(userInfo.getUserAccount(), nickname, userInfo.getId(), userInfo.getUserHeadPhoto());
+        FriendsResponseDto friendsResponseDto = FriendsResponseDto.completeFriendDto(userInformation.getUserAccount(), nickname, userInformation.getId(), userInformation.getUserHeadPhoto());
         MessagePackage messagePackage = MessagePackage.completePackage(CommandType.COMMAND_APPLY.getCode(), ObjectUtil.serialize(friendsResponseDto));
         String channelId = feignNettyServiceImpl.getChannelId(friendAccount);
         if (StringUtils.isBlank(channelId)) {
@@ -127,8 +125,8 @@ public class AboutFriendsController {
         try {
             Integer userId = userInfoService.getUserInfoServiceByAccount(userAccount).getId();
             Integer friendId = userInfoService.getUserInfoServiceByAccount(friendAccount).getId();
-            friendsInfoMapper.insert(FriendsInfo.createFriend(userId, friendId, nickname));
-            friendsInfoMapper.insert(FriendsInfo.createFriend(friendId, userId, nickname));
+            friendsRelationshipMapper.insert(FriendsRelationship.createFriend(userId, friendId, nickname));
+            friendsRelationshipMapper.insert(FriendsRelationship.createFriend(friendId, userId, nickname));
             transactionManager.commit(status);
         } catch (Exception e) {
             transactionManager.rollback(status);
@@ -145,10 +143,10 @@ public class AboutFriendsController {
      */
     @GetMapping("/info")
     public R<?> getFriendsInfo(@RequestParam("friendsAccount") String friendsAccount) {
-        UserInfo userInfo = userInfoService.getUserInfoServiceByAccount(friendsAccount);
-        if (ObjectUtil.isNull(userInfo)) {
+        UserInformation userInformation = userInfoService.getUserInfoServiceByAccount(friendsAccount);
+        if (ObjectUtil.isNull(userInformation)) {
             return BaseResponseUtils.getNotFoundResponse();
         }
-        return BaseResponseUtils.getSuccessResponse(JSON.toJSONString(userInfo));
+        return BaseResponseUtils.getSuccessResponse(JSON.toJSONString(userInformation));
     }
 }

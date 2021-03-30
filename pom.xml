@@ -15,7 +15,7 @@
     </modules>
 
     <properties>
-        <rocketmq.version>2.1.0</rocketmq.version>
+        <rocketmq.version>2.2.0</rocketmq.version>
         <junit.version>4.12</junit.version>
         <lombok.version>1.18.10</lombok.version>
         <log4j.version>1.2.17</log4j.version>
