@@ -4,15 +4,10 @@ import cn.hutool.core.util.ObjectUtil;
 import com.xiaoma.im.constants.Constants;
 import com.xiaoma.im.entity.UserStatus;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Date;
 import java.util.Map;
 
 /**

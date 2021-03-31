@@ -66,7 +66,6 @@ public class ImServer implements CommandLineRunner {
     public void destroyInServer() {
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
-        sessionSocketUtils.clearSession();
     }
 
     @Async

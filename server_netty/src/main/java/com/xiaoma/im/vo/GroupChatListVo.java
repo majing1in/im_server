@@ -12,7 +12,6 @@ import java.io.Serializable;
  * @Date 2021/3/27 0027 11:33
  * @Email 1468835254@qq.com
  */
-@Builder
 @Getter
 @Setter
 public class GroupChatListVo extends GroupChatList implements Serializable {

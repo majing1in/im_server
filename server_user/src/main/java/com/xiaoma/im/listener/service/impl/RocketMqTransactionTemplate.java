@@ -18,6 +18,9 @@ public class RocketMqTransactionTemplate implements MqTransactionTemplate {
     @Resource
     private RocketMQTemplate rocketMQTemplate;
     @Resource
+
+
+
     private TransactionContainer transactionContainer;
 
     @Override
