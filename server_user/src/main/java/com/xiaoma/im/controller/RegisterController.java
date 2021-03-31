@@ -75,20 +75,20 @@ public class RegisterController {
         if (StringUtils.isBlank(uuid)) {
             return BaseResponseUtils.getValidResponse();
         }
-        String redisKey = Constants.SERVER_REGISTER_TIMEOUT + uuid;
-        String verificationCode = (String) redisTemplateUtils.get(redisKey);
-        if (StringUtils.isBlank(verificationCode) || !ObjectUtil.equal(verificationCode, userInfoVo.getVerificationCode())) {
-            return BaseResponseUtils.getTimeoutResponse();
-        }
-        redisTemplateUtils.delete(Collections.singletonList(redisKey));
-        UserInformation user = userInformationMapper.selectOne(new LambdaQueryWrapper<UserInformation>().eq(UserInformation::getUserAccount, userInfoVo.getUserAccount()));
-        if (ObjectUtil.isNotEmpty(user)) {
-            return BaseResponseUtils.getFailedResponse();
-        }
-        userInfoVo.setCreateTime(DateUtils.localDateTimeConvertToDate());
-        userInfoVo.setUpdateTime(DateUtils.localDateTimeConvertToDate());
         TransactionStatus status = platformTransactionManager.getTransaction(new DefaultTransactionDefinition());
         try {
+            String redisKey = Constants.SERVER_REGISTER_TIMEOUT + uuid;
+            String verificationCode = (String) redisTemplateUtils.get(redisKey);
+            if (StringUtils.isBlank(verificationCode) || !ObjectUtil.equal(verificationCode, userInfoVo.getVerificationCode())) {
+                return BaseResponseUtils.getTimeoutResponse();
+            }
+            redisTemplateUtils.delete(Collections.singletonList(redisKey));
+            UserInformation user = userInformationMapper.selectOne(new LambdaQueryWrapper<UserInformation>().eq(UserInformation::getUserAccount, userInfoVo.getUserAccount()));
+            if (ObjectUtil.isNotEmpty(user)) {
+                return BaseResponseUtils.getFailedResponse();
+            }
+            userInfoVo.setCreateTime(DateUtils.localDateTimeConvertToDate());
+            userInfoVo.setUpdateTime(DateUtils.localDateTimeConvertToDate());
             platformTransactionManager.commit(status);
             return BaseResponseUtils.getSuccessResponse();
         } catch (Exception e) {

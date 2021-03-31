@@ -4,7 +4,9 @@ import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xiaoma.im.constants.Constants;
 import com.xiaoma.im.dao.UserInformationMapper;
+import com.xiaoma.im.dao.UserLoginRecordMapper;
 import com.xiaoma.im.entity.UserInformation;
+import com.xiaoma.im.entity.UserLoginRecord;
 import com.xiaoma.im.entity.UserStatus;
 import com.xiaoma.im.spi.FeignNettyServiceImpl;
 import io.swagger.annotations.Api;
@@ -15,8 +17,10 @@ import org.springframework.web.bind.annotation.*;
 import com.xiaoma.im.utils.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Date;
 
 /**
  * @Author Xiaoma
@@ -34,6 +38,9 @@ public class LoginController {
     private UserInformationMapper userInformationMapper;
 
     @Resource
+    private UserLoginRecordMapper loginRecordMapper;
+
+    @Resource
     private RedisTemplateUtils redisTemplateUtils;
 
     @Resource
@@ -41,7 +48,7 @@ public class LoginController {
 
     @ApiOperation("用户单点登录")
     @PostMapping("/login")
-    public R<?> userLogin(@RequestBody UserInformation userInformation) {
+    public R<?> userLogin(@RequestBody UserInformation userInformation, HttpServletRequest request) {
         if (ObjectUtil.isEmpty(userInformation) || StringUtils.isBlank(userInformation.getUserAccount()) || StringUtils.isBlank(userInformation.getUserPassword())) {
             return BaseResponseUtils.getValidResponse();
         }
@@ -71,6 +78,8 @@ public class LoginController {
         String token = MD5Util.convertMD5(UuidUtils.getUuid());
         // 设置权限
         redisTemplateUtils.set(Constants.SERVER_ONLINE_AUTH + userInformation.getUserAccount(), token);
+        UserLoginRecord loginRecord = UserLoginRecord.builder().userId(user.getId()).loginTime(DateUtils.localDateTimeConvertToDate()).userIp(request.getRemoteAddr()).build();
+        loginRecordMapper.insert(loginRecord);
         log.info("用户登录成功! account = {}， time = {}", userInformation.getUserAccount(), LocalDateTime.now());
         return BaseResponseUtils.getSuccessResponse(token);
     }

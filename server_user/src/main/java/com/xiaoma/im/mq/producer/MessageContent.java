@@ -12,9 +12,8 @@ import org.springframework.messaging.support.GenericMessage;
 @Builder
 public class MessageContent {
 
-    public static GenericMessage<MessageContent> getMessageContent(String messageId, MessagePackage body) {
-        MessageContent content = new MessageContent(messageId, body);
-        return new GenericMessage<MessageContent>(content);
+    public static MessageContent getMessageContent(String messageId, MessagePackage body) {
+        return new MessageContent(messageId, body);
     }
 
     private String messageId;

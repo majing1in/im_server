@@ -37,7 +37,7 @@ public class PackageServiceImpl implements PackageService {
     public static final String REDIS_LOCK = "redis_lock";
 
     @Resource
-    private MessageQueueListMapper messageQueueListMapper;
+    private PrivateChatListMapper privateChatListMapper;
 
     @Resource
     private UserBalanceMoneyMapper userBalanceMoneyMapper;
@@ -76,13 +76,13 @@ public class PackageServiceImpl implements PackageService {
         UserInformation sender = userInfoService.getUserInfoServiceByAccount(redPackage.getRedPackageOwner());
         UserInformation receiver = userInfoService.getUserInfoServiceById(id);
         String redPackageId = UuidUtils.getUuid();
-        MessageQueueList messageQueueList = new MessageQueueList();
+        PrivateChatList messageQueueList = new PrivateChatList();
         messageQueueList.setCreateTime(redPackage.getCreateTime());
         messageQueueList.setMessageType(Constants.RED_PACKAGE_ONE);
         messageQueueList.setMessageContent(redPackageId);
         messageQueueList.setSenderId(sender.getId());
         messageQueueList.setReceiverId(receiver.getId());
-        messageQueueListMapper.insert(messageQueueList);
+        privateChatListMapper.insert(messageQueueList);
         if (redisTemplateUtils.setIfAbsent(Constants.RED_PACKAGE_ONE_KEY + redPackageId, redPackage, 1, TimeUnit.DAYS)) {
             UserStatus userStatus = (UserStatus) redisTemplateUtils.getHashKey(Constants.SERVER_REDIS_LIST, Constants.SERVER_ONLINE + receiver.getUserAccount());
             MessagePackage messagePackage = MessagePackage.completePackage(CommandType.COMMAND_PACKAGE.getCode(), ObjectUtil.serialize(redPackageId));
@@ -101,7 +101,7 @@ public class PackageServiceImpl implements PackageService {
         UserInformation sender = userInfoService.getUserInfoServiceByAccount(redPackage.getRedPackageOwner());
         List<GroupFriends> groupUsers = groupUsersMapper.selectList(new LambdaUpdateWrapper<GroupFriends>().eq(GroupFriends::getGroupId, id));
         List<Integer> userIds = groupUsers.stream().map(GroupFriends::getUserId).collect(Collectors.toList());
-        List<UserInformation> userInformations = userInformationMapper.selectBatchIds(userIds);
+        List<UserInformation> userInformationList = userInformationMapper.selectBatchIds(userIds);
         String redPackageId = UuidUtils.getUuid();
         GroupChatList groupChatList = new GroupChatList();
         groupChatList.setSenderId(sender.getId());
@@ -113,7 +113,7 @@ public class PackageServiceImpl implements PackageService {
         if (!redisTemplateUtils.setIfAbsent(Constants.RED_PACKAGE_GROUP_KEY + redPackageId, redPackage, 2, TimeUnit.DAYS)) {
             return false;
         }
-        for (UserInformation userInformation : userInformations) {
+        for (UserInformation userInformation : userInformationList) {
             UserStatus userStatus = (UserStatus) redisTemplateUtils.getHashKey(Constants.SERVER_REDIS_LIST, Constants.SERVER_ONLINE + userInformation.getUserAccount());
             MessagePackage messagePackage = MessagePackage.completePackage(Constants.GROUP_LIST_MESSAGE, ObjectUtil.serialize(groupChatList));
             if (ObjectUtil.isNull(userStatus)) {

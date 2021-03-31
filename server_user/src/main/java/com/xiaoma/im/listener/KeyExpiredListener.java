@@ -1,4 +1,4 @@
-package com.xiaoma.im.config;
+package com.xiaoma.im.listener;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.listener.KeyExpirationEventMessageListener;

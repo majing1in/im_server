@@ -7,7 +7,6 @@ import com.xiaoma.im.entity.*;
 import com.xiaoma.im.service.PackageService;
 import com.xiaoma.im.utils.BaseResponseUtils;
 import com.xiaoma.im.utils.R;
-import com.xiaoma.im.utils.RedisTemplateUtils;
 import com.xiaoma.im.utils.SqlUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -37,9 +36,6 @@ public class PackageController {
 
     @Resource
     private PlatformTransactionManager transactionManager;
-
-    @Resource
-    private RedisTemplateUtils redisTemplateUtils;
 
     @ApiOperation(value = "生成红包", notes = "生成红包")
     @PostMapping("/generator")

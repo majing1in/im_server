@@ -1,5 +1,6 @@
 package com.xiaoma.im.mq.consumer;
 
+import com.alibaba.fastjson.JSON;
 import com.xiaoma.im.mq.producer.MessageContent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
@@ -18,6 +19,6 @@ public class Consumption implements RocketMQListener<MessageContent> {
 
     @Override
     public void onMessage(MessageContent message) {
-
+        log.info("message = {}", JSON.toJSONString(message));
     }
 }

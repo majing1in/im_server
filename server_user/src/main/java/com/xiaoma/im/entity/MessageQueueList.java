@@ -1,71 +1,53 @@
 package com.xiaoma.im.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.io.Serializable;
 import java.util.Date;
 
-@TableName("private_chat_list")
+@TableName("message_queue_list")
 public class MessageQueueList implements Serializable {
     private static final long serialVersionUID = 3099345143310168692L;
 
-    @TableId(value = "id",type = IdType.AUTO)
-    private Integer id;
+    private String messageId;
 
-    private Integer senderId;
-
-    private Integer receiverId;
+    private Integer isConsumption;
 
     private String messageContent;
 
-    private Integer messageType;
-
     private Date createTime;
+
+    private Date updateTime;
 
     public MessageQueueList() {
     }
 
-    public MessageQueueList(Integer id, Integer senderId, Integer receiverId, String messageContent, Integer messageType, Date createTime) {
-        this.id = id;
-        this.senderId = senderId;
-        this.receiverId = receiverId;
+    public MessageQueueList(String messageId, Integer isConsumption, String messageContent, Date createTime, Date updateTime) {
+        this.messageId = messageId;
+        this.isConsumption = isConsumption;
         this.messageContent = messageContent;
-        this.messageType = messageType;
         this.createTime = createTime;
+        this.updateTime = updateTime;
     }
 
-    public Integer getId() {
-        return id;
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public String getMessageId() {
+        return messageId;
     }
 
-    public Integer getMessageType() {
-        return messageType;
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
     }
 
-    public void setMessageType(Integer messageType) {
-        this.messageType = messageType;
+    public Integer getIsConsumption() {
+        return isConsumption;
     }
 
-    public Integer getSenderId() {
-        return senderId;
-    }
-
-    public void setSenderId(Integer senderId) {
-        this.senderId = senderId;
-    }
-
-    public Integer getReceiverId() {
-        return receiverId;
-    }
-
-    public void setReceiverId(Integer receiverId) {
-        this.receiverId = receiverId;
+    public void setIsConsumption(Integer isConsumption) {
+        this.isConsumption = isConsumption;
     }
 
     public String getMessageContent() {
@@ -73,7 +55,7 @@ public class MessageQueueList implements Serializable {
     }
 
     public void setMessageContent(String messageContent) {
-        this.messageContent = messageContent == null ? null : messageContent.trim();
+        this.messageContent = messageContent;
     }
 
     public Date getCreateTime() {
@@ -82,5 +64,13 @@ public class MessageQueueList implements Serializable {
 
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
+    }
+
+    public Date getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
     }
 }
